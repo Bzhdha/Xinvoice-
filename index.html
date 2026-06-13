@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analyseur FacturX – AFNOR NF Z55-500</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <!-- PDF.js via CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+
+<!-- ── En-tête ──────────────────────────────────────────────────────────────── -->
+<header class="app-header">
+  <div class="header-inner">
+    <div class="header-logo">
+      <span class="logo-icone">🧾</span>
+      <div class="logo-texte">
+        <span class="logo-titre">Analyseur FacturX</span>
+        <span class="logo-sous">AFNOR NF Z55-500 · EN 16931</span>
+      </div>
+    </div>
+    <nav class="header-nav">
+      <a href="#section-accueil" class="nav-lien actif">Analyser</a>
+      <a href="#section-cas-usage" class="nav-lien">Cas d'usage</a>
+      <a href="#section-aide" class="nav-lien">Aide</a>
+    </nav>
+  </div>
+</header>
+
+<!-- ── Section principale ────────────────────────────────────────────────────── -->
+<main class="app-main">
+
+  <!-- Bannière d'erreur -->
+  <div id="banniere-erreur" class="banniere-erreur cache">
+    <span class="erreur-icone">⚠</span>
+    <span id="erreur-message"></span>
+    <button onclick="document.getElementById('banniere-erreur').classList.add('cache')" class="btn-fermer">✕</button>
+  </div>
+
+  <!-- ── Section d'accueil ─────────────────────────────────────────────────── -->
+  <section id="section-accueil" class="section-accueil">
+    <div class="accroche">
+      <h1>Analysez vos factures FacturX</h1>
+      <p class="accroche-sous">
+        Identificaton de tous les champs BT/BG selon la norme <strong>AFNOR NF Z55-500</strong>,
+        détection du profil, contrôle de conformité et guide de cas d'usage avec workflows métier.
+      </p>
+    </div>
+
+    <!-- Zone de dépôt -->
+    <div id="zone-depot" class="zone-depot">
+      <input type="file" id="input-fichier" accept=".pdf,.xml,application/pdf,text/xml,application/xml" class="input-cache">
+      <div class="depot-icone">📂</div>
+      <p class="depot-titre">Déposez votre facture FacturX ici</p>
+      <p class="depot-sous">ou <span class="depot-lien">cliquez pour sélectionner un fichier</span></p>
+      <p class="depot-formats">Formats acceptés : <code>PDF</code> (FacturX / ZUGFeRD) · <code>XML</code> (CII)</p>
+      <div class="depot-separateur"><span>ou</span></div>
+      <button id="btn-explorer-exemple" class="btn-exemple">
+        ▶ Charger une facture de démonstration
+      </button>
+    </div>
+
+    <!-- Section résultats (cachée au départ) -->
+    <div id="section-resultats" class="section-resultats cache"></div>
+
+    <!-- Cartes d'info profils -->
+    <div class="section-info-profils">
+      <h2>Les profils FacturX</h2>
+      <div class="grille-profils-info">
+        <div class="carte-profil-info profil-min">
+          <div class="profil-info-nom">Minimum</div>
+          <div class="profil-info-desc">Données essentielles uniquement. Sans lignes de détail. Pour la phase transitoire ou les micro-entreprises.</div>
+          <div class="profil-info-champs">~12 champs obligatoires</div>
+        </div>
+        <div class="carte-profil-info profil-bwl">
+          <div class="profil-info-nom">Basic WL</div>
+          <div class="profil-info-desc">Minimum + ventilation TVA détaillée. Sans lignes. Permet la réconciliation comptable.</div>
+          <div class="profil-info-champs">~16 champs obligatoires</div>
+        </div>
+        <div class="carte-profil-info profil-bas">
+          <div class="profil-info-nom">Basic</div>
+          <div class="profil-info-desc">Ajoute les lignes de facture avec quantité, prix et TVA. Recommandé pour le B2B.</div>
+          <div class="profil-info-champs">~22 champs + lignes</div>
+        </div>
+        <div class="carte-profil-info profil-en">
+          <div class="profil-info-nom">EN 16931</div>
+          <div class="profil-info-desc">Conformité complète à la norme européenne. Requis pour les marchés publics (B2G).</div>
+          <div class="profil-info-champs">~30 champs + lignes</div>
+        </div>
+        <div class="carte-profil-info profil-ext">
+          <div class="profil-info-nom">Extended</div>
+          <div class="profil-info-desc">Extension française au-delà de EN 16931. Informations spécifiques Chorus Pro / secteurs réglementés.</div>
+          <div class="profil-info-champs">Champs additionnels FR</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Section Cas d'usage ────────────────────────────────────────────────── -->
+  <section id="section-cas-usage" class="section-cas-usage">
+    <div class="section-header">
+      <h2>Cas d'usage AFNOR NF Z55-500</h2>
+      <p>Explorez les workflows métier, les obligations par profil et les étapes selon votre rôle — même sans déposer de facture.</p>
+    </div>
+    <div id="cas-usage-accueil"></div>
+  </section>
+
+  <!-- ── Section Aide ───────────────────────────────────────────────────────── -->
+  <section id="section-aide" class="section-aide">
+    <div class="section-header">
+      <h2>Guide d'utilisation</h2>
+    </div>
+
+    <div class="aide-grille">
+      <div class="aide-carte">
+        <h3>📂 Déposer une facture</h3>
+        <ol>
+          <li>Glissez un fichier <strong>PDF FacturX</strong> ou <strong>XML CII</strong> dans la zone de dépôt</li>
+          <li>L'analyseur extrait automatiquement l'XML embarqué dans le PDF</li>
+          <li>Tous les champs BT/BG sont identifiés et affichés</li>
+          <li>Un rapport de conformité est généré selon le profil déclaré (BT-24)</li>
+        </ol>
+      </div>
+      <div class="aide-carte">
+        <h3>🔍 Comprendre les résultats</h3>
+        <ul>
+          <li><span class="legende-ok">✓ Vert</span> — Champ présent et renseigné</li>
+          <li><span class="legende-erreur">✕ Rouge</span> — Champ obligatoire manquant</li>
+          <li><span class="legende-cond">⚠ Orange</span> — Champ conditionnel absent</li>
+          <li><span class="legende-na">– Gris</span> — Non applicable dans ce profil</li>
+          <li><span class="legende-opt">○ Bleu</span> — Optionnel, non renseigné</li>
+        </ul>
+      </div>
+      <div class="aide-carte">
+        <h3>💼 Cas d'usage et workflows</h3>
+        <p>L'onglet <strong>Cas d'usage</strong> vous permet de :</p>
+        <ul>
+          <li>Sélectionner un cas métier (B2B, avoir, autoliquidation…)</li>
+          <li>Choisir votre <strong>rôle</strong> (vendeur, acheteur, comptable, PDP)</li>
+          <li>Indiquer l'<strong>état actuel</strong> de la facture</li>
+          <li>Voir les <strong>prochaines étapes personnalisées</strong> avec checklists</li>
+        </ul>
+      </div>
+      <div class="aide-carte">
+        <h3>📋 Champs BT / BG</h3>
+        <p>La norme définit :</p>
+        <ul>
+          <li><strong>BT</strong> (Business Term) — un champ de données unitaire</li>
+          <li><strong>BG</strong> (Business Group) — un regroupement de champs liés</li>
+          <li>Chaque BT a un niveau par profil : <code>M</code> obligatoire, <code>C</code> conditionnel, <code>O</code> optionnel, <code>N</code> non applicable</li>
+        </ul>
+      </div>
+      <div class="aide-carte">
+        <h3>🔐 Confidentialité</h3>
+        <p>Tout le traitement est effectué <strong>localement dans votre navigateur</strong>. Aucune donnée n'est transmise à un serveur. Vos factures ne quittent pas votre poste.</p>
+      </div>
+      <div class="aide-carte">
+        <h3>ℹ️ Formats supportés</h3>
+        <ul>
+          <li><strong>PDF FacturX</strong> (versions 1.0, 1.0.06) avec XML CII embarqué</li>
+          <li><strong>PDF ZUGFeRD</strong> (versions 1.0, 2.0, 2.1) – CII</li>
+          <li><strong>XML CII</strong> (Cross-Industry Invoice, UN/CEFACT)</li>
+          <li><strong>XML UBL</strong> – extraction basique (informations principales)</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ── Pied de page ──────────────────────────────────────────────────────────── -->
+<footer class="app-footer">
+  <div class="footer-inner">
+    <p>Analyseur FacturX · Référentiel <strong>AFNOR NF Z55-500</strong> · Norme <strong>EN 16931-1:2017</strong></p>
+    <p class="footer-mention">Application locale — aucune donnée transmise · Traitement 100% navigateur</p>
+  </div>
+</footer>
+
+<!-- ── Scripts ───────────────────────────────────────────────────────────────── -->
+<script>
+  // Configurer le worker PDF.js (même version CDN)
+  if (window['pdfjs-dist/build/pdf']) {
+    window['pdfjs-dist/build/pdf'].GlobalWorkerOptions.workerSrc =
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  }
+</script>
+<script src="js/fields.js"></script>
+<script src="js/usecases.js"></script>
+<script src="js/parser.js"></script>
+<script src="js/app.js"></script>
+
+<script>
+  // Navigation par ancres
+  document.querySelectorAll('.nav-lien').forEach(lien => {
+    lien.addEventListener('click', (e) => {
+      e.preventDefault();
+      const cible = document.querySelector(lien.getAttribute('href'));
+      if (cible) cible.scrollIntoView({ behavior: 'smooth' });
+      document.querySelectorAll('.nav-lien').forEach(l => l.classList.remove('actif'));
+      lien.classList.add('actif');
+    });
+  });
+
+  // Activer le worker PDF.js après chargement
+  document.addEventListener('DOMContentLoaded', () => {
+    const pdfjsLib = window['pdfjs-dist/build/pdf'];
+    if (pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc =
+        'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  });
+</script>
+
+</body>
+</html>
