@@ -537,6 +537,151 @@ const WORKFLOW_TIERS_PAYEUR = {
     },
   ],
 };
+      action: 'Archivage avec accord tripartite',
+      checklist: ['Archiver la facture','Archiver l\'accord avec le tiers payeur','Conservation 10 ans'],
+    },
+  ],
+};
+
+/**
+ * WORKFLOW_PARTIEL_TIERS (Figure 10 – Prise en charge partielle acheteur + tiers connu)
+ * La facture est adressée à l'acheteur, mais un tiers (OD/PDP) prend en charge une partie.
+ * Deux flux de paiement distincts → deux encaissements → e-reporting du montant tiers → statut « Encaissée ».
+ * Correspond à XP-4.
+ */
+const WORKFLOW_PARTIEL_TIERS = {
+  etats: ['BROUILLON','EMISE','DEPOSEE','RECUE','EN_CONTROLE','ACCEPTEE','PAIEMENT_TRANSMIS','ENCAISSEE','ARCHIVEE'],
+  transitions: [
+    {
+      de: 'BROUILLON', vers: 'EMISE', acteur: 'vendeur',
+      action: '① Création de la facture avec identification du tiers et de sa quote-part',
+      description: 'La facture est adressée à l\'acheteur. Le tiers payeur (OD/PDP) est identifié dans BG-10 avec sa quote-part.',
+      checklist: [
+        'Identifier le tiers dans BG-10 (BT-59, BT-60)',
+        'Indiquer la quote-part du tiers et celle de l\'acheteur',
+        'IBAN du vendeur en BT-84 (les deux parties paient au vendeur)',
+        'Référencer la convention de prise en charge (contrat, convention…)',
+      ],
+    },
+    {
+      de: 'EMISE', vers: 'DEPOSEE', acteur: 'pdp_e',
+      action: '② Transmission flux 1 de la facture + statut → CdD/PPF + information du tiers payeur',
+      description: 'La PDP-E transmet la facture et informe le tiers payeur (OD/PDP) de la facture émise.',
+      checklist: [
+        'Transmission PDP-E → PDP-R (acheteur)',
+        'Flux 1 et statut « Déposée » au CdD/PPF',
+        'Notification au tiers payeur (OD/PDP) de la facture et de sa quote-part',
+      ],
+    },
+    {
+      de: 'DEPOSEE', vers: 'RECUE', acteur: 'pdp_r',
+      action: '③ Réception de la facture par l\'acheteur (PDP-R)',
+      checklist: ['Réception automatique PDP-R'],
+    },
+    {
+      de: 'RECUE', vers: 'EN_CONTROLE', acteur: 'acheteur',
+      action: '④ Traitement de la facture – mise à jour des statuts',
+      description: 'L\'acheteur contrôle la facture et coordonne avec le tiers la répartition des montants.',
+      checklist: [
+        'Vérifier la répartition acheteur / tiers',
+        'Contrôler le montant total et les quotes-parts',
+        'Coordonner avec le tiers (OD/PDP) pour validation de sa quote-part',
+      ],
+    },
+    {
+      de: 'EN_CONTROLE', vers: 'ACCEPTEE', acteur: 'acheteur',
+      action: 'Acceptation et instruction de double paiement',
+      description: 'L\'acheteur accepte la facture et instrumente les deux flux de paiement (sa quote-part + celle du tiers).',
+      checklist: [
+        'Valider la facture',
+        'Programmer son propre paiement (quote-part acheteur)',
+        'Notifier le tiers (OD/PDP) de son instruction de paiement (quote-part tiers)',
+      ],
+    },
+    {
+      de: 'ACCEPTEE', vers: 'PAIEMENT_TRANSMIS', acteur: 'acheteur',
+      action: 'Double paiement : acheteur + tiers (OD/PDP) → statut « Paiement Transmis »',
+      description: 'L\'acheteur paie sa quote-part et le tiers (OD/PDP) paie la sienne. Les deux statuts « Paiement Transmis » sont transmis au vendeur.',
+      checklist: [
+        'L\'acheteur vire sa quote-part au IBAN du vendeur',
+        'Le tiers (OD/PDP) vire sa quote-part au IBAN du vendeur',
+        'Statut « Paiement Transmis » de l\'acheteur via PDP-R',
+        'Statut « Paiement Transmis » du tiers (OD/PDP) via son canal',
+      ],
+    },
+    {
+      de: 'PAIEMENT_TRANSMIS', vers: 'ENCAISSEE', acteur: 'vendeur',
+      action: 'Double encaissement + e-reporting du montant tiers + statut « Encaissée »',
+      description: 'Le vendeur encaisse les deux paiements. Le montant payé par le tiers (OD/PDP) est soumis à e-reporting. Statut « Encaissée » transmis à PDP-R et CdD/PPF.',
+      checklist: [
+        'Encaisser la quote-part de l\'acheteur (6a acheteur)',
+        'Encaisser la quote-part du tiers (OD/PDP)',
+        'E-reporting du montant payé par le tiers (si B2C ou tiers non assujetti)',
+        'Émettre statut « Encaissée » via PDP-E → PDP-R et CdD/PPF',
+      ],
+    },
+    {
+      de: 'ENCAISSEE', vers: 'ARCHIVEE', acteur: 'comptable_v',
+      action: 'Archivage avec convention de prise en charge et e-reporting',
+      checklist: [
+        'Archiver la facture',
+        'Archiver la convention de prise en charge (tiers)',
+        'Archiver les deux preuves de paiement',
+        'Conserver les données d\'e-reporting transmises au PPF',
+      ],
+    },
+  ],
+};
+
+/**
+ * WORKFLOW_FRAIS_COLLAB_B2C (Figure 12 – Frais payés par un collaborateur, facture au nom du collaborateur)
+ * ATTENTION : Ce flux est B2C (facture au nom du collaborateur, un particulier).
+ * → Il relève de l'E-REPORTING (flux 10.3, 10.4 vers PPF), PAS de l'e-facturation B2B.
+ * Le paiement (5) précède la création de la facture (1).
+ * L'entreprise (OD/PDP côté acheteur) reçoit les données pour remboursement des frais.
+ * Trois acteurs : PDP-E (Vendeur), Tiers (Collaborateur/individu), OD/PDP (Entreprise employeur).
+ */
+const WORKFLOW_FRAIS_COLLAB_B2C = {
+  etats: ['EMISE','DEPOSEE','ENCAISSEE','ARCHIVEE'],
+  transitions: [
+    {
+      de: 'EMISE', vers: 'DEPOSEE', acteur: 'vendeur',
+      action: '① + ② Création de la facture + ajout e-reporting (flux 10.3 / 10.4 → PPF)',
+      description: 'IMPORTANT : Cette opération est B2C (facture au nom du collaborateur individu). Elle relève de l\'e-reporting, pas de l\'e-facture B2B. Le paiement a déjà été effectué par le collaborateur (étape 5). Le vendeur a encaissé (6a) AVANT de créer la facture.\n\nLe vendeur ajoute la vente dans son flux d\'e-reporting quotidien (flux 10.3 / 10.4) transmis au PPF.',
+      checklist: [
+        'VÉRIFIER : La facture est au nom du collaborateur (individu), pas de l\'entreprise',
+        'Si facture au nom de l\'entreprise → utiliser le flux e-facture B2B (XP-5)',
+        'Le paiement (5) et l\'encaissement (6a) sont ANTÉRIEURS à la création de la facture',
+        'Ajouter la vente dans le flux d\'e-reporting quotidien (flux 10.3 / 10.4) vers le PPF',
+        'Le PPF reçoit le cumul quotidien des ventes B2C',
+      ],
+    },
+    {
+      de: 'DEPOSEE', vers: 'ENCAISSEE', acteur: 'vendeur',
+      action: '③a/③b Transmission de la facture au collaborateur ET à l\'entreprise + données d\'encaissement → PPF (étape 7)',
+      description: 'La facture est transmise au collaborateur (3a) et à l\'entreprise (OD/PDP) (3b). Les données de paiement (cumul quotidien des encaissements) sont transmises au PPF (étape 7).',
+      checklist: [
+        'Remettre la facture au collaborateur (3a)',
+        'Transmettre une copie à l\'entreprise (OD/PDP) pour remboursement (3b)',
+        'Le PPF (étape 7) reçoit le cumul quotidien des encaissements',
+        'L\'OD/PDP de l\'entreprise reçoit les données pour intégration en note de frais',
+      ],
+    },
+    {
+      de: 'ENCAISSEE', vers: 'ARCHIVEE', acteur: 'comptable_a',
+      action: 'Remboursement du collaborateur par l\'entreprise + archivage',
+      description: 'L\'entreprise rembourse le collaborateur via sa procédure de notes de frais. La facture est archivée côté vendeur et côté entreprise.',
+      checklist: [
+        'L\'entreprise rembourse le collaborateur (note de frais)',
+        'Vérifier la déductibilité TVA (facture au nom du collaborateur ≠ au nom de l\'entreprise)',
+        'Archiver la facture au niveau du collaborateur',
+        'L\'entreprise archive dans sa note de frais',
+        'Conservation 10 ans',
+      ],
+    },
+  ],
+};
+
 // Aligné sur le cas nominal officiel AFNOR/DGFiP (Figure 2)
 function _workflowStandard(acteurControle) {
   acteurControle = acteurControle || 'acheteur';
@@ -701,26 +846,7 @@ const USE_CASES = {
       'Montant pris en charge par le tiers avec son identité',
       'Base de la prise en charge (accord, convention, subvention)',
     ],
-    workflow: {
-      etats: ['BROUILLON','EMISE','TRANSMISE','RECUE','EN_CONTROLE','ACCEPTEE','PAYEE','ARCHIVEE'],
-      transitions: [
-        { de:'BROUILLON', vers:'EMISE', acteur:'vendeur', action:'Émission avec ventilation des parts',
-          checklist:[
-            'Indiquer le montant total et la répartition',
-            'Identifier le tiers (BG-10) et sa quote-part',
-            'Référencer la convention ou accord de prise en charge',
-            'Indiquer l\'IBAN du vendeur pour les deux flux',
-          ]},
-        { de:'RECUE', vers:'EN_CONTROLE', acteur:'acheteur', action:'Contrôle et coordination avec le tiers',
-          checklist:['Vérifier la répartition des montants','Valider avec le tiers la quote-part','Programmer les deux paiements'] },
-        { de:'EN_CONTROLE', vers:'ACCEPTEE', acteur:'acheteur', action:'Acceptation et double instruction de paiement',
-          checklist:['Valider la facture','Instruire le tiers pour sa quote-part'] },
-        { de:'ACCEPTEE', vers:'PAYEE', acteur:'acheteur', action:'Double paiement : acheteur + tiers',
-          checklist:['Paiement de la quote-part acheteur','Confirmation de paiement par le tiers'] },
-        { de:'PAYEE', vers:'ARCHIVEE', acteur:'comptable_a', action:'Archivage avec preuves des deux paiements',
-          checklist:['Archiver la convention de prise en charge','Archiver les deux preuves de paiement'] },
-      ],
-    },
+    workflow: WORKFLOW_PARTIEL_TIERS,
     signaux_detection: {
       description: 'Cas probable si :',
       indices: [
@@ -2133,6 +2259,69 @@ Object.assign(USE_CASES, {
     ],
     workflow: WORKFLOW_REJET_TECHNIQUE,
     signaux_detection: { description: 'Ce flux s\'applique en cas d\'erreur technique détectée par la PDP-E', indices: [] },
+  },
+
+  'REF-PARTIEL-TIERS': {
+    id: 'REF-PARTIEL-TIERS',
+    categorie: 'Référence officielle AFNOR/DGFiP',
+    titre: 'Prise en charge partielle acheteur + tiers connu (Figure 10)',
+    description: 'La facture est adressée à l\'acheteur, mais un tiers (OD/PDP) prend en charge une quote-part. Deux flux de paiement distincts → deux encaissements → e-reporting du montant tiers → statut « Encaissée ». Correspond à XP-4.',
+    profil_recommande: 'en',
+    profils_acceptes: ['en', 'ext'],
+    contexte: 'Prise en charge partielle par un OPCO (formation), une mutuelle, une assurance, une centrale de paiement de groupe. Le tiers est connu et identifié dès l\'émission de la facture.',
+    conditions: [
+      'Le tiers payeur (OD/PDP) est identifié dans BG-10',
+      'Deux quotes-parts distinctes : acheteur et tiers',
+      'Deux flux de paiement séparés au vendeur',
+      'E-reporting du montant payé par le tiers si applicable',
+      'Statut « Encaissée » émis après les deux encaissements',
+    ],
+    champs_requis_cle: ['BT-1','BT-2','BT-5','BT-27','BT-44','BT-59','BT-60','BT-84','BT-112','BT-115'],
+    mentions_obligatoires: [
+      'Tiers payeur identifié (BG-10 : BT-59, BT-60)',
+      'Quote-part de chaque partie clairement indiquée',
+      'Convention de prise en charge référencée',
+    ],
+    workflow: WORKFLOW_PARTIEL_TIERS,
+    signaux_detection: {
+      description: 'Cas probable si :',
+      indices: [
+        { champ: 'BT-59', presence: true, message: 'Tiers payeur identifié (BG-10)' },
+        { champ: 'BT-22', pattern: 'prise en charge|subvention|opco|mutuelle|assurance|partiel', message: 'Mention prise en charge partielle dans la note' },
+      ],
+    },
+  },
+
+  'REF-FRAIS-COLLAB-B2C': {
+    id: 'REF-FRAIS-COLLAB-B2C',
+    categorie: 'Référence officielle AFNOR/DGFiP',
+    titre: 'Frais collaborateur – facture au nom du collaborateur (Figure 12) – E-REPORTING B2C',
+    description: '⚠ FLUX B2C — PAS d\'e-facture B2B. La facture est au nom du collaborateur (individu). Le vendeur est soumis à l\'e-reporting (flux 10.3 / 10.4 → PPF). L\'entreprise reçoit les données pour rembourser le collaborateur. Paiement (5) et encaissement (6a) antérieurs à la création de la facture.',
+    profil_recommande: 'min',
+    profils_acceptes: ['min', 'bwl'],
+    contexte: 'Frais professionnels payés par un collaborateur avec une facture au nom du collaborateur (individu) et non de l\'entreprise. Contrairement à XP-5, la facture n\'est PAS au nom de l\'entreprise.',
+    conditions: [
+      '⚠ La facture est au NOM DU COLLABORATEUR (individu), pas de l\'entreprise',
+      'C\'est une transaction B2C → e-reporting obligatoire, PAS d\'e-facture B2B',
+      'Le paiement (5) précède la création de la facture (1)',
+      'Flux 10.3 / 10.4 transmis au PPF (cumul quotidien des ventes et encaissements)',
+      'L\'entreprise (OD/PDP) reçoit les données en copie pour la note de frais',
+      'La TVA peut ne pas être déductible pour l\'entreprise (facture pas à son nom)',
+    ],
+    champs_requis_cle: ['BT-1','BT-2','BT-5','BT-27','BT-44','BT-112','BT-115'],
+    mentions_obligatoires: [
+      'Nom et adresse du collaborateur (individu) comme acheteur',
+      'PAS de numéro TVA acheteur (individu)',
+      'E-reporting flux 10.3 / 10.4 au PPF obligatoire',
+    ],
+    workflow: WORKFLOW_FRAIS_COLLAB_B2C,
+    signaux_detection: {
+      description: 'Cas B2C — flux e-reporting, pas e-facture',
+      indices: [
+        { champ: 'BT-48', presence: false, message: 'Pas de numéro TVA acheteur (individu probable)' },
+        { champ: 'BT-47', presence: false, message: 'Pas d\'identifiant légal acheteur (individu)' },
+      ],
+    },
   },
 });
 
