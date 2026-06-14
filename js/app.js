@@ -774,27 +774,42 @@ function renderCasUsage(r) {
   // Sélecteur de cas d'usage
   const cuActif = etatApp.casUsageSelectionne || (r.casUsageDetectes[0]?.id);
 
+  // Grouper les cas d'usage par catégorie
+  const parCategorie = {};
+  Object.entries(USE_CASES).forEach(([id, cu]) => {
+    const cat = cu.categorie || 'Autres';
+    if (!parCategorie[cat]) parCategorie[cat] = [];
+    parCategorie[cat].push([id, cu]);
+  });
+
   el.innerHTML = `
     <div class="cas-usage-layout">
       <aside class="liste-cas-usage">
-        <h3>Cas d'usage AFNOR</h3>
+        <h3>Cas d'usage AFNOR XP Z12-014</h3>
         <p class="sous-titre-cu">Sélectionnez un cas d'usage pour explorer le flux, les obligations et les étapes</p>
         <ul class="cu-liste">
-          ${Object.entries(USE_CASES).map(([id, cu]) => {
-            const detection = r.casUsageDetectes.find(c => c.id === id);
-            const score = detection?.score || 0;
-            return `
-              <li class="cu-item ${cuActif === id ? 'actif' : ''} ${score > 0 ? 'detecte' : ''}"
-                  onclick="selectionnerCasUsage('${id}')">
-                <div class="cu-item-titre">
-                  <span>${escHtml(cu.titre)}</span>
-                  ${score > 0 ? `<span class="badge-detecte" title="Score de correspondance : ${score}">✓ Détecté</span>` : ''}
-                </div>
-                <div class="cu-item-profil">
-                  <span class="badge-profil profil-${cu.profil_recommande}">${PROFILES[cu.profil_recommande]?.label}</span>
-                </div>
-              </li>`;
-          }).join('')}
+          ${Object.entries(parCategorie).map(([cat, items]) => `
+            <li class="cu-categorie-groupe">
+              <div class="cu-categorie-label">${escHtml(cat)}</div>
+              <ul class="cu-sous-liste">
+                ${items.map(([id, cu]) => {
+                  const detection = r.casUsageDetectes.find(c => c.id === id);
+                  const score = detection?.score || 0;
+                  return `
+                    <li class="cu-item ${cuActif === id ? 'actif' : ''} ${score > 0 ? 'detecte' : ''}"
+                        onclick="selectionnerCasUsage('${id}')">
+                      <div class="cu-item-titre">
+                        <span class="cu-item-id">${escHtml(cu.id)}</span>
+                        <span>${escHtml(cu.titre)}</span>
+                        ${score > 0 ? `<span class="badge-detecte" title="Score : ${score}">✓</span>` : ''}
+                      </div>
+                      <div class="cu-item-profil">
+                        <span class="badge-profil profil-${cu.profil_recommande}">${PROFILES[cu.profil_recommande]?.label || cu.profil_recommande}</span>
+                      </div>
+                    </li>`;
+                }).join('')}
+              </ul>
+            </li>`).join('')}
         </ul>
       </aside>
       <main class="detail-cas-usage" id="detail-cas-usage">
@@ -1104,18 +1119,30 @@ function initCasUsage() {
   const conteneur = document.getElementById('cas-usage-accueil');
   if (!conteneur) return;
 
+  // Grouper par catégorie
+  const parCategorie = {};
+  Object.entries(USE_CASES).forEach(([id, cu]) => {
+    const cat = cu.categorie || 'Autres';
+    if (!parCategorie[cat]) parCategorie[cat] = [];
+    parCategorie[cat].push([id, cu]);
+  });
+
   conteneur.innerHTML = `
-    <div class="grille-cu-accueil">
-      ${Object.entries(USE_CASES).map(([id, cu]) => `
-        <div class="cu-card-accueil" onclick="afficherDetailCuAccueil('${id}')">
-          <div class="cu-card-header">
-            <span class="cu-card-id">${escHtml(cu.id)}</span>
-            <span class="badge-profil profil-${cu.profil_recommande}">${PROFILES[cu.profil_recommande]?.label}</span>
-          </div>
-          <h4>${escHtml(cu.titre)}</h4>
-          <p>${escHtml(cu.description)}</p>
-        </div>`).join('')}
-    </div>
+    ${Object.entries(parCategorie).map(([cat, items]) => `
+      <div class="cu-accueil-categorie">
+        <h3 class="cu-accueil-categorie-titre">${escHtml(cat)}</h3>
+        <div class="grille-cu-accueil">
+          ${items.map(([id, cu]) => `
+            <div class="cu-card-accueil" onclick="afficherDetailCuAccueil('${id}')">
+              <div class="cu-card-header">
+                <span class="cu-card-id">${escHtml(cu.id)}</span>
+                <span class="badge-profil profil-${cu.profil_recommande}">${PROFILES[cu.profil_recommande]?.label || cu.profil_recommande}</span>
+              </div>
+              <h4>${escHtml(cu.titre)}</h4>
+              <p>${escHtml(cu.description)}</p>
+            </div>`).join('')}
+        </div>
+      </div>`).join('')}
     <div id="cu-detail-accueil" class="cache"></div>`;
 }
 

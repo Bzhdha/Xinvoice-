@@ -297,6 +297,11 @@ p:last-child { margin-bottom: 0; }
 .badge-nb { background: var(--bleu); color: white; font-size: .75rem; padding: 1px 6px; border-radius: 999px; margin-left: 4px; }
 .badge-moi { background: var(--vert); color: white; font-size: .75rem; padding: 2px 8px; border-radius: 999px; margin-left: 4px; }
 .badge-etat { background: var(--gris-100); border: 1px solid var(--gris-200); border-radius: var(--rayon-sm); padding: 2px 8px; font-size: .8rem; }
+/* États officiels réforme e-invoicing */
+.btn-etat[data-etat="DEPOSEE"]          { border-color: #6366f1; }
+.btn-etat[data-etat="REJETEE"]          { border-color: #f43f5e; }
+.btn-etat[data-etat="PAIEMENT_TRANSMIS"]{ border-color: #0ea5e9; }
+.btn-etat[data-etat="ENCAISSEE"]        { border-color: #15803d; }
 .badge-erreur { background: var(--rouge-clair); color: var(--rouge); border: 1px solid var(--rouge-bord); border-radius: 999px; padding: 2px 10px; font-size: .8rem; font-weight: 700; }
 .badge-avert  { background: var(--orange-clair); color: var(--orange); border: 1px solid var(--orange-bord); border-radius: 999px; padding: 2px 10px; font-size: .8rem; font-weight: 700; }
 .badge-detecte { background: var(--vert); color: white; font-size: .7rem; padding: 1px 6px; border-radius: 999px; }
@@ -566,10 +571,17 @@ dl { display: flex; flex-direction: column; gap: 6px; }
 .liste-cas-usage { position: sticky; top: 80px; align-self: start; }
 .liste-cas-usage h3 { margin-bottom: var(--espace-xs); }
 .sous-titre-cu { font-size: .8rem; color: var(--gris-500); margin-bottom: var(--espace-md); }
-.cu-liste { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.cu-liste { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0; }
+.cu-categorie-groupe { list-style: none; margin-bottom: var(--espace-sm); }
+.cu-categorie-label {
+  font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--gris-400); padding: 6px var(--espace-sm) 4px;
+  border-bottom: 1px solid var(--gris-100); margin-bottom: 2px;
+}
+.cu-sous-liste { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 2px; }
 .cu-item {
-  padding: var(--espace-sm) var(--espace-md);
-  border: 1px solid var(--gris-200);
+  padding: 6px var(--espace-md);
+  border: 1px solid transparent;
   border-radius: var(--rayon-md);
   cursor: pointer;
   background: white;
@@ -577,8 +589,9 @@ dl { display: flex; flex-direction: column; gap: 6px; }
 }
 .cu-item:hover { border-color: var(--bleu); background: var(--bleu-clair); }
 .cu-item.actif { border-color: var(--bleu); background: var(--bleu-clair); box-shadow: var(--ombre-sm); }
-.cu-item.detecte { border-left: 3px solid var(--vert); }
-.cu-item-titre { display: flex; align-items: center; justify-content: space-between; gap: 4px; font-size: .875rem; font-weight: 600; margin-bottom: 4px; }
+.cu-item.detecte .cu-item-titre::after { content: '✓'; color: var(--vert); font-weight: 700; margin-left: 4px; }
+.cu-item-titre { display: flex; align-items: baseline; gap: 6px; font-size: .82rem; font-weight: 500; margin-bottom: 2px; flex-wrap: wrap; }
+.cu-item-id { font-family: var(--police-mono); font-size: .7rem; color: var(--gris-400); background: var(--gris-50, #f9fafb); border: 1px solid var(--gris-200); border-radius: 4px; padding: 1px 4px; flex-shrink: 0; }
 .cu-item-profil { }
 
 .detail-cas-usage { background: white; border: 1px solid var(--gris-200); border-radius: var(--rayon-xl); padding: var(--espace-xl); }
@@ -715,6 +728,12 @@ dl { display: flex; flex-direction: column; gap: 6px; }
 
 /* ─── Section cas d'usage accueil ───────────────────────────────────────────── */
 .section-cas-usage { margin-bottom: var(--espace-2xl); }
+.cu-accueil-categorie { margin-bottom: var(--espace-xl); }
+.cu-accueil-categorie-titre {
+  font-size: .85rem; font-weight: 700; text-transform: uppercase; letter-spacing: .07em;
+  color: var(--gris-500); border-bottom: 2px solid var(--gris-200); padding-bottom: var(--espace-xs);
+  margin-bottom: var(--espace-md);
+}
 .grille-cu-accueil { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: var(--espace-md); margin-top: var(--espace-md); }
 .cu-card-accueil {
   background: white; border: 1px solid var(--gris-200);
