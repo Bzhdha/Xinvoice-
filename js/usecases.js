@@ -170,7 +170,373 @@ const WORKFLOW_REJET_TECHNIQUE = {
   ],
 };
 
-// ─── Workflow standard (réutilisé pour les cas simples) ─────────────────────
+/**
+ * WORKFLOW_REFUS (Figure 5 – Refus d'une facture par l'ACHETEUR)
+ * L'acheteur refuse la facture (motif métier). Statut « Refusée » transmis via PDP-R → PDP-E → CdD/PPF.
+ * Annulation comptable des deux côtés si la facture avait déjà été enregistrée.
+ * Le vendeur devra émettre un avoir ou une facture corrective.
+ */
+const WORKFLOW_REFUS = {
+  etats: ['BROUILLON','EMISE','DEPOSEE','RECUE','EN_CONTROLE','REFUSEE','ARCHIVEE'],
+  transitions: [
+    {
+      de: 'BROUILLON', vers: 'EMISE', acteur: 'vendeur',
+      action: '① Création de la facture',
+      description: 'Le vendeur crée et soumet la facture à sa PDP-E.',
+      checklist: ['Vérifier tous les champs obligatoires','Contrôler les montants HT/TVA/TTC'],
+    },
+    {
+      de: 'EMISE', vers: 'DEPOSEE', acteur: 'pdp_e',
+      action: '② Transmission flux 1 + statut « Déposée » → CdD/PPF',
+      description: 'La PDP-E valide et transmet la facture. Le CdD/PPF reçoit le flux 1 et le statut « Déposée ».',
+      checklist: ['Validation technique par la PDP-E','Envoi flux 1 au CdD/PPF','Acheminement vers PDP-R acheteur'],
+    },
+    {
+      de: 'DEPOSEE', vers: 'RECUE', acteur: 'pdp_r',
+      action: '③a Réception de la facture par la PDP-R',
+      description: 'La PDP-R reçoit et met la facture à disposition de l\'acheteur.',
+      checklist: ['Accusé de réception automatique'],
+    },
+    {
+      de: 'RECUE', vers: 'EN_CONTROLE', acteur: 'acheteur',
+      action: '④a Traitement de la facture',
+      description: 'L\'acheteur contrôle la facture (conformité, rapprochement commande/livraison).',
+      checklist: ['Vérifier la conformité avec la commande','Contrôler les montants et TVA'],
+    },
+    {
+      de: 'EN_CONTROLE', vers: 'REFUSEE', acteur: 'acheteur',
+      action: '④b Refus de la facture – statut « Refusée » → PDP-R → PDP-E → CdD/PPF',
+      description: 'L\'acheteur refuse la facture pour motif métier. Le statut « Refusée » est transmis via PDP-R à la PDP-E puis au CdD/PPF (étape 4c).',
+      checklist: [
+        'Documenter le motif du refus',
+        'Envoyer le statut « Refusée » via PDP-R',
+        'PDP-E reçoit le statut (étape 4c) et notifie le vendeur',
+        'CdD/PPF reçoit également le statut « Refusée »',
+        '① b (acheteur) : si la facture avait déjà été enregistrée comptablement, procéder à l\'annulation comptable',
+      ],
+    },
+    {
+      de: 'REFUSEE', vers: 'ARCHIVEE', acteur: 'vendeur',
+      action: '① a Annulation comptable + action corrective',
+      description: 'Le vendeur procède à l\'annulation comptable de la facture refusée et émet un avoir ou une facture corrective.',
+      checklist: [
+        'Annuler la facture en comptabilité (extourne ou avoir)',
+        'Identifier le motif du refus transmis par l\'acheteur',
+        'Émettre une facture corrective (TypeCode 384) ou un avoir (TypeCode 381)',
+        'Archiver la facture refusée avec le motif de refus',
+      ],
+    },
+  ],
+};
+
+/**
+ * WORKFLOW_LITIGE_AVOIR (Figure 6 – Facture en litige suivie d'un AVOIR partiel ou total)
+ * L'acheteur met la facture F1 « en litige ». Le vendeur émet un avoir F2.
+ * Après acceptation de F2, paiement du solde (F1 - F2) et encaissement.
+ * Les deux documents (F1 et F2) passent au statut « Encaissée ».
+ */
+const WORKFLOW_LITIGE_AVOIR = {
+  etats: ['BROUILLON','EMISE','DEPOSEE','RECUE','EN_CONTROLE','LITIGE','ACCEPTEE','PAIEMENT_TRANSMIS','ENCAISSEE','ARCHIVEE'],
+  transitions: [
+    {
+      de: 'BROUILLON', vers: 'EMISE', acteur: 'vendeur',
+      action: '① Création de la facture F1',
+      checklist: ['Émettre la facture F1 normalement'],
+    },
+    {
+      de: 'EMISE', vers: 'DEPOSEE', acteur: 'pdp_e',
+      action: '② Transmission flux 1 (F1) + statut → CdD/PPF',
+      checklist: ['Transmission PDP-E → PDP-R','Flux 1 et statut « Déposée » au CdD/PPF'],
+    },
+    {
+      de: 'DEPOSEE', vers: 'RECUE', acteur: 'pdp_r',
+      action: '③ Réception de F1',
+      checklist: ['Accusé de réception PDP-R'],
+    },
+    {
+      de: 'RECUE', vers: 'EN_CONTROLE', acteur: 'acheteur',
+      action: '④ Traitement de F1',
+      checklist: ['Contrôle F1 : conformité, montants, TVA'],
+    },
+    {
+      de: 'EN_CONTROLE', vers: 'LITIGE', acteur: 'acheteur',
+      action: 'Mise en litige – statut « En litige » transmis au vendeur',
+      description: 'L\'acheteur émet un statut « En litige » sur F1 avec le motif. Ce statut remonte via PDP-R → PDP-E.',
+      checklist: [
+        'Documenter le motif du litige',
+        'Envoyer le statut « En litige » via PDP-R',
+        'PDP-E reçoit le statut et notifie le vendeur',
+      ],
+    },
+    {
+      de: 'LITIGE', vers: 'EMISE', acteur: 'vendeur',
+      action: 'Création et émission de l\'avoir F2 (partiel ou total)',
+      description: 'Le vendeur crée un avoir F2 pour résoudre le litige. F2 référence F1 via BT-25.',
+      checklist: [
+        'Créer l\'avoir F2 avec TypeCode 381',
+        'Référencer F1 dans BT-25 (numéro F1) et BT-26 (date F1)',
+        'Montant de l\'avoir = montant du litige (partiel ou total)',
+        'Transmettre F2 via PDP-E (flux 2 → CdD/PPF)',
+      ],
+    },
+    {
+      de: 'LITIGE', vers: 'ACCEPTEE', acteur: 'acheteur',
+      action: 'Réception et approbation de l\'avoir F2 – statut « Approuvée » sur F1 et F2',
+      description: 'L\'acheteur valide l\'avoir F2. Les deux documents passent au statut « Approuvée ».',
+      checklist: [
+        'Vérifier que F2 couvre bien le litige',
+        'Envoyer statut « Approuvée » sur F2 ET sur F1 via PDP-R',
+        'Comptabiliser l\'avoir F2',
+        'Calculer le solde restant dû (F1 – F2) si avoir partiel',
+      ],
+    },
+    {
+      de: 'ACCEPTEE', vers: 'PAIEMENT_TRANSMIS', acteur: 'acheteur',
+      action: 'Le cas échéant, paiement du solde (F1 – F2)',
+      description: 'Si l\'avoir est partiel, l\'acheteur paie le solde restant dû. Statut « Paiement Transmis » émis.',
+      checklist: [
+        'Calculer le solde : montant F1 – montant F2',
+        'Effectuer le virement du solde au vendeur',
+        'Envoyer statut « Paiement Transmis » via PDP-R sur F1 et F2',
+      ],
+    },
+    {
+      de: 'PAIEMENT_TRANSMIS', vers: 'ENCAISSEE', acteur: 'vendeur',
+      action: 'Encaissement + statut « Encaissée » sur F1 et F2',
+      description: 'Le vendeur encaisse le solde et émet le statut « Encaissée » sur F1 et F2 via PDP-E → PDP-R → CdD/PPF.',
+      checklist: [
+        'Vérifier le crédit bancaire',
+        'Rapprocher le paiement avec F1 et F2',
+        'Émettre statut « Encaissée » sur F1 via PDP-E',
+        'Émettre statut « Encaissée » sur F2 via PDP-E',
+        'CdD/PPF reçoit le statut « Encaissée »',
+      ],
+    },
+    {
+      de: 'ENCAISSEE', vers: 'ARCHIVEE', acteur: 'comptable_v',
+      action: 'Archivage de F1 et F2',
+      checklist: ['Archiver F1 et F2 ensemble avec les statuts de litige','Conservation 10 ans'],
+    },
+  ],
+};
+
+/**
+ * WORKFLOW_LITIGE_RECTIFICATIF (Figure 7 – Facture en litige suivie d'une Facture Rectificative)
+ * Similaire à Figure 6 mais F2 est une facture rectificative (TypeCode 384) qui annule et remplace F1.
+ * F2 peut être payée seule si F1 est annulée, ou un solde peut être calculé.
+ */
+const WORKFLOW_LITIGE_RECTIFICATIF = {
+  etats: ['BROUILLON','EMISE','DEPOSEE','RECUE','EN_CONTROLE','LITIGE','ACCEPTEE','PAIEMENT_TRANSMIS','ENCAISSEE','ARCHIVEE'],
+  transitions: [
+    {
+      de: 'BROUILLON', vers: 'EMISE', acteur: 'vendeur',
+      action: '① Création de la facture F1',
+      checklist: ['Émettre la facture F1 normalement'],
+    },
+    {
+      de: 'EMISE', vers: 'DEPOSEE', acteur: 'pdp_e',
+      action: '② Transmission flux 1 (F1) + statut → CdD/PPF',
+      checklist: ['Transmission PDP-E → PDP-R','Flux 1 et statut « Déposée » au CdD/PPF'],
+    },
+    {
+      de: 'DEPOSEE', vers: 'RECUE', acteur: 'pdp_r',
+      action: '③ Réception de F1', checklist: ['Réception PDP-R'],
+    },
+    {
+      de: 'RECUE', vers: 'EN_CONTROLE', acteur: 'acheteur',
+      action: '④ Traitement de F1', checklist: ['Contrôle F1'],
+    },
+    {
+      de: 'EN_CONTROLE', vers: 'LITIGE', acteur: 'acheteur',
+      action: 'Mise en litige – statut « En litige »',
+      description: 'L\'acheteur met F1 en litige avec motif. Le statut remonte au vendeur via PDP-R → PDP-E.',
+      checklist: ['Documenter le motif','Envoyer statut « En litige » via PDP-R'],
+    },
+    {
+      de: 'LITIGE', vers: 'EMISE', acteur: 'vendeur',
+      action: 'Création et émission de la facture rectificative F2',
+      description: 'Le vendeur crée une facture rectificative F2 (TypeCode 384) qui annule et remplace F1.',
+      checklist: [
+        'Créer F2 avec TypeCode 384 (facture corrective)',
+        'Référencer F1 dans BT-25 et BT-26',
+        'F2 doit corriger les éléments litigieux de F1',
+        'Transmettre F2 via PDP-E (flux F2 → CdD/PPF)',
+      ],
+    },
+    {
+      de: 'LITIGE', vers: 'ACCEPTEE', acteur: 'acheteur',
+      action: 'Réception et approbation de F2 – statut « Approuvée » sur F1 et F2',
+      description: 'L\'acheteur valide F2. Les deux documents F1 et F2 passent au statut « Approuvée ».',
+      checklist: [
+        'Vérifier que F2 corrige correctement les éléments litigieux',
+        'Envoyer statut « Approuvée » sur F2 et F1 via PDP-R',
+        'F1 est annulée comptablement et remplacée par F2',
+        'Comptabiliser F2',
+      ],
+    },
+    {
+      de: 'ACCEPTEE', vers: 'PAIEMENT_TRANSMIS', acteur: 'acheteur',
+      action: 'Paiement de F2 + statut « Paiement Transmis »',
+      description: 'L\'acheteur paie le montant de F2 (la facture rectificative). Statut « Paiement Transmis » émis sur F2.',
+      checklist: [
+        'Payer le montant de F2',
+        'Envoyer statut « Paiement Transmis » sur F2 via PDP-R',
+        'Si un solde avait déjà été payé sur F1, prendre en compte dans le calcul',
+      ],
+    },
+    {
+      de: 'PAIEMENT_TRANSMIS', vers: 'ENCAISSEE', acteur: 'vendeur',
+      action: 'Encaissement + statut « Encaissée » sur F1 et F2',
+      description: 'Le vendeur encaisse le paiement de F2 et émet le statut « Encaissée » sur F1 et F2.',
+      checklist: [
+        'Vérifier le crédit bancaire',
+        'Émettre statut « Encaissée » sur F1 et F2 via PDP-E',
+        'CdD/PPF notifié du statut « Encaissée »',
+      ],
+    },
+    {
+      de: 'ENCAISSEE', vers: 'ARCHIVEE', acteur: 'comptable_v',
+      action: 'Archivage de F1 et F2',
+      checklist: ['Archiver F1 (annulée) et F2 (rectificative) avec les statuts de litige','Conservation 10 ans'],
+    },
+  ],
+};
+
+/**
+ * WORKFLOW_DEJA_PAYEE (Figure 8 – Facture déjà payée par l'ACHETEUR ou un tiers PAYEUR)
+ * Le paiement est effectué AVANT l'émission de la facture (achat comptant, paiement à la commande).
+ * La facture est créée a posteriori. Elle passe directement au statut « Encaissée » sans
+ * les étapes EN_CONTROLE / ACCEPTEE / PAIEMENT_TRANSMIS.
+ */
+const WORKFLOW_DEJA_PAYEE = {
+  etats: ['BROUILLON','EMISE','DEPOSEE','RECUE','ENCAISSEE','ARCHIVEE'],
+  transitions: [
+    {
+      de: 'BROUILLON', vers: 'EMISE', acteur: 'vendeur',
+      action: '① Création de la facture déjà payée',
+      description: 'Le paiement a déjà été reçu (étape 5 du diagramme). Le vendeur a encaissé (6a) AVANT de créer la facture.',
+      checklist: [
+        'Vérifier que le paiement a bien été encaissé (6a)',
+        'Indiquer BT-20 = "Acquitté" ou "Payé"',
+        'Renseigner BT-81 (moyen de paiement utilisé)',
+        'Solde à payer = 0 (déjà réglé)',
+        'Date de paiement ≤ date d\'émission',
+      ],
+    },
+    {
+      de: 'EMISE', vers: 'DEPOSEE', acteur: 'pdp_e',
+      action: '② Transmission flux 1 + statut « Déposée » et « Encaissée » → CdD/PPF',
+      description: 'La PDP-E transmet le flux 1. Dès la transmission, le statut « Encaissée » peut être émis simultanément (paiement déjà constaté).',
+      checklist: [
+        'Transmission PDP-E → PDP-R',
+        'Flux 1 et statut « Déposée » au CdD/PPF',
+        'Le statut « Encaissée » est mis à jour immédiatement (6b)',
+      ],
+    },
+    {
+      de: 'DEPOSEE', vers: 'RECUE', acteur: 'pdp_r',
+      action: '③ Réception de la facture par l\'acheteur',
+      description: 'L\'acheteur reçoit la facture à titre informatif (déjà payée).',
+      checklist: ['Réception PDP-R automatique'],
+    },
+    {
+      de: 'RECUE', vers: 'ENCAISSEE', acteur: 'pdp_e',
+      action: '⑥b/⑥c Mise à jour statut « Encaissée » → PDP-R et CdD/PPF (étape 7)',
+      description: 'Le statut « Encaissée » est émis par la PDP-E du vendeur, transmis à la PDP-R (6c) et au CdD/PPF (étape 7). Pas de statuts EN_CONTROLE / ACCEPTEE / PAIEMENT_TRANSMIS.',
+      checklist: [
+        'Émettre statut « Encaissée » via PDP-E (6b)',
+        'PDP-R reçoit le statut « Encaissée » (6c)',
+        'CdD/PPF reçoit le statut « Encaissée » (7)',
+        'L\'acheteur comptabilise la charge sans procédure de paiement',
+      ],
+    },
+    {
+      de: 'ENCAISSEE', vers: 'ARCHIVEE', acteur: 'comptable_a',
+      action: 'Archivage direct',
+      checklist: ['Archiver la facture déjà payée','Pas de flux de paiement à archiver'],
+    },
+  ],
+};
+
+/**
+ * WORKFLOW_TIERS_PAYEUR (Figure 9 – Facture à payer par un tiers désigné à la facturation)
+ * Trois acteurs : PDP-E (Vendeur), PDP-R (Acheteur), OD/PDP (Tiers Payeur).
+ * L'acheteur valide la facture mais informe le tiers payeur qui effectue le règlement.
+ * Le vendeur reçoit le paiement du tiers et émet le statut « Encaissée ».
+ */
+const WORKFLOW_TIERS_PAYEUR = {
+  etats: ['BROUILLON','EMISE','DEPOSEE','RECUE','EN_CONTROLE','ACCEPTEE','PAIEMENT_TRANSMIS','ENCAISSEE','ARCHIVEE'],
+  transitions: [
+    {
+      de: 'BROUILLON', vers: 'EMISE', acteur: 'vendeur',
+      action: '① Création de la facture F1 avec identification du tiers payeur',
+      description: 'La facture identifie le tiers payeur (OD ou PDP) dans BG-10 avec l\'IBAN de paiement.',
+      checklist: [
+        'Identifier le tiers payeur dans BG-10 (BT-59 nom, BT-60 identifiant)',
+        'BT-84 = IBAN du tiers payeur (pas du vendeur)',
+        'Vérifier le mandat ou accord tripartite avec le tiers',
+      ],
+    },
+    {
+      de: 'EMISE', vers: 'DEPOSEE', acteur: 'pdp_e',
+      action: '② Transmission flux 1 (F1) + statut → CdD/PPF + information tiers payeur',
+      description: 'La PDP-E transmet la facture et informe le tiers payeur (OD/PDP) de l\'existence de la facture.',
+      checklist: [
+        'Transmission PDP-E → PDP-R (acheteur)',
+        'Flux 1 et statut « Déposée » au CdD/PPF',
+        'Notification au tiers payeur de la facture émise',
+      ],
+    },
+    {
+      de: 'DEPOSEE', vers: 'RECUE', acteur: 'pdp_r',
+      action: '③ Réception de la facture par l\'acheteur',
+      checklist: ['Accusé de réception PDP-R'],
+    },
+    {
+      de: 'RECUE', vers: 'EN_CONTROLE', acteur: 'acheteur',
+      action: '④ Traitement de la facture par l\'acheteur',
+      checklist: ['Contrôle conformité','Rapprochement commande'],
+    },
+    {
+      de: 'EN_CONTROLE', vers: 'ACCEPTEE', acteur: 'acheteur',
+      action: 'Information du bon traitement → tiers payeur',
+      description: 'L\'acheteur valide la facture et informe le tiers payeur (OD/PDP) que la facture est acceptée et doit être payée.',
+      checklist: [
+        'Valider la facture',
+        'Envoyer statut « Acceptée » via PDP-R',
+        'Notifier le tiers payeur (OD/PDP) de l\'instruction de paiement',
+        'Fournir les références de paiement au tiers payeur',
+      ],
+    },
+    {
+      de: 'ACCEPTEE', vers: 'PAIEMENT_TRANSMIS', acteur: 'tiers',
+      action: 'Paiement de la facture par le tiers payeur (OD/PDP) + statut « Paiement Transmis »',
+      description: 'Le tiers payeur (OD ou PDP) effectue le virement et émet le statut « Paiement Transmis » qui remonte via PDP-R → PDP-E.',
+      checklist: [
+        'Le tiers payeur (OD/PDP) vire le montant au IBAN du vendeur',
+        'Statut « Paiement Transmis » émis par le tiers via sa plateforme',
+        'Statut transmis au vendeur via PDP-R → PDP-E',
+      ],
+    },
+    {
+      de: 'PAIEMENT_TRANSMIS', vers: 'ENCAISSEE', acteur: 'vendeur',
+      action: 'Encaissement + information tiers payeur + statut « Encaissée »',
+      description: 'Le vendeur encaisse le paiement du tiers et informe le tiers de l\'encaissement. Statut « Encaissée » transmis à PDP-R et CdD/PPF.',
+      checklist: [
+        'Vérifier le crédit bancaire reçu du tiers payeur',
+        'Informer le tiers payeur de l\'encaissement de la facture',
+        'Émettre statut « Encaissée » via PDP-E (6b)',
+        'CdD/PPF reçoit le statut « Encaissée »',
+        'PDP-R (acheteur) reçoit le statut « Encaissée »',
+      ],
+    },
+    {
+      de: 'ENCAISSEE', vers: 'ARCHIVEE', acteur: 'comptable_v',
+      action: 'Archivage avec accord tripartite',
+      checklist: ['Archiver la facture','Archiver l\'accord avec le tiers payeur','Conservation 10 ans'],
+    },
+  ],
+};
 // Aligné sur le cas nominal officiel AFNOR/DGFiP (Figure 2)
 function _workflowStandard(acteurControle) {
   acteurControle = acteurControle || 'acheteur';
@@ -275,28 +641,7 @@ const USE_CASES = {
       'Date de paiement (BT-9)',
       'Montant déjà réglé',
     ],
-    workflow: {
-      etats: ['BROUILLON','EMISE','TRANSMISE','RECUE','ARCHIVEE'],
-      transitions: [
-        { de:'BROUILLON', vers:'EMISE', acteur:'vendeur', action:'Émission de la facture acquittée',
-          checklist:[
-            'Vérifier que le paiement a bien été reçu avant émission',
-            'Indiquer BT-9 (date d\'échéance) = date du jour ou antérieure',
-            'Ajouter BT-20 (texte conditions paiement) = "Acquitté"',
-            'Renseigner BT-81 (moyen de paiement) : carte, virement, espèces…',
-            'Total restant dû = 0',
-          ]},
-        { de:'EMISE', vers:'TRANSMISE', acteur:'vendeur', action:'Transmission de la facture pour archivage comptable',
-          checklist:['Transmettre via PDP/PPF','La facture est informative : le paiement est déjà effectué'] },
-        { de:'TRANSMISE', vers:'RECUE', acteur:'dsp', action:'Acheminement', checklist:['Réception automatique'] },
-        { de:'RECUE', vers:'ARCHIVEE', acteur:'acheteur', action:'Archivage direct (pas de paiement à faire)',
-          checklist:[
-            'Vérifier la mention "Acquitté"',
-            'Comptabiliser la charge et le paiement simultanément',
-            'Archiver la facture sans procédure de paiement',
-          ]},
-      ],
-    },
+    workflow: WORKFLOW_DEJA_PAYEE,
     signaux_detection: {
       description: 'Cas probable si :',
       indices: [
@@ -326,30 +671,7 @@ const USE_CASES = {
       'IBAN du tiers payeur pour le virement (BT-84)',
       'Mention explicite que le paiement doit être adressé au tiers',
     ],
-    workflow: {
-      etats: ['BROUILLON','EMISE','TRANSMISE','RECUE','EN_CONTROLE','ACCEPTEE','PAYEE','ARCHIVEE'],
-      transitions: [
-        { de:'BROUILLON', vers:'EMISE', acteur:'vendeur', action:'Émission avec identification du tiers payeur',
-          checklist:[
-            'Renseigner BG-10 (partie bénéficiaire du paiement)',
-            'BT-59 : nom du tiers payeur',
-            'BT-60 : identifiant du tiers payeur',
-            'BT-84 : IBAN du tiers payeur (pas celui du vendeur)',
-            'Vérifier le mandat ou accord tripartite',
-          ]},
-        { de:'EMISE', vers:'TRANSMISE', acteur:'vendeur', action:'Transmission à l\'acheteur ET notification au tiers',
-          checklist:['Transmettre via PDP/PPF','Notifier le tiers payeur de la facture émise'] },
-        { de:'TRANSMISE', vers:'RECUE', acteur:'dsp', action:'Acheminement', checklist:['Statut de réception'] },
-        { de:'RECUE', vers:'EN_CONTROLE', acteur:'acheteur', action:'Contrôle et validation de la facture',
-          checklist:['Vérifier l\'identité du tiers payeur','Contrôler les montants','Valider le paiement par le tiers'] },
-        { de:'EN_CONTROLE', vers:'ACCEPTEE', acteur:'acheteur', action:'Acceptation et instruction de paiement au tiers',
-          checklist:['Notifier le tiers payeur de l\'acceptation','Transmettre l\'ordre de paiement au tiers'] },
-        { de:'ACCEPTEE', vers:'PAYEE', acteur:'tiers', action:'Paiement par le tiers au vendeur',
-          checklist:['Le tiers effectue le virement sur l\'IBAN du vendeur','Conserver la preuve de paiement'] },
-        { de:'PAYEE', vers:'ARCHIVEE', acteur:'comptable_a', action:'Archivage tripartite',
-          checklist:['Archiver la facture, l\'accord tripartite, la preuve de paiement'] },
-      ],
-    },
+    workflow: WORKFLOW_TIERS_PAYEUR,
     signaux_detection: {
       description: 'Cas probable si :',
       indices: [
@@ -1659,6 +1981,133 @@ Object.assign(USE_CASES, {
     ],
     workflow: WORKFLOW_NOMINAL,
     signaux_detection: { description: 'Ce flux est le flux de référence pour toute facture B2B française', indices: [] },
+  },
+
+  'REF-REFUS': {
+    id: 'REF-REFUS',
+    categorie: 'Référence officielle AFNOR/DGFiP',
+    titre: 'Refus de facture par l\'acheteur (Figure 5)',
+    description: 'L\'acheteur refuse la facture pour motif métier. Statut « Refusée » transmis via PDP-R → PDP-E → CdD/PPF. Annulation comptable des deux côtés. Le vendeur doit émettre un avoir ou une facture corrective.',
+    profil_recommande: 'en',
+    profils_acceptes: ['bas', 'en', 'ext'],
+    contexte: 'Tout cas où l\'acheteur refuse une facture pour non-conformité métier (erreur de prix, de quantité, de référence, prestation non conforme…).',
+    conditions: [
+      'La facture a bien été transmise et reçue par la PDP-R',
+      'Le refus est un refus métier (pas un rejet technique PDP-E)',
+      'Le statut « Refusée » est transmis via PDP-R → PDP-E et au CdD/PPF',
+      'Si la facture avait déjà été comptabilisée : annulation comptable obligatoire des deux côtés',
+    ],
+    champs_requis_cle: [],
+    mentions_obligatoires: ['Motif du refus documenté','Statut « Refusée » transmis à toutes les parties','Avoir ou facture corrective à émettre'],
+    workflow: WORKFLOW_REFUS,
+    signaux_detection: { description: 'Cas activé lors d\'un refus métier acheteur', indices: [] },
+  },
+
+  'REF-LITIGE-AVOIR': {
+    id: 'REF-LITIGE-AVOIR',
+    categorie: 'Référence officielle AFNOR/DGFiP',
+    titre: 'Facture en litige + avoir partiel ou total (Figure 6)',
+    description: 'L\'acheteur met la facture F1 « en litige ». Le vendeur émet un avoir F2 pour résoudre le litige. Après acceptation de F2, paiement du solde (F1 – F2) et statut « Encaissée » sur F1 et F2.',
+    profil_recommande: 'en',
+    profils_acceptes: ['bas', 'en', 'ext'],
+    contexte: 'Litige commercial résolu par émission d\'un avoir partiel (ex : erreur sur une ligne) ou total (annulation complète de F1).',
+    conditions: [
+      'L\'acheteur émet un statut « En litige » sur F1 avec motif',
+      'Le vendeur émet un avoir F2 (TypeCode 381) référençant F1',
+      'L\'acheteur valide F2 et émet « Approuvée » sur F1 et F2',
+      'Si avoir partiel : paiement du solde F1 – F2',
+      'Statut « Encaissée » émis sur F1 ET F2',
+    ],
+    champs_requis_cle: ['BT-3','BT-25','BT-26'],
+    mentions_obligatoires: ['Avoir F2 avec TypeCode 381','BT-25 = numéro de F1','BT-26 = date de F1'],
+    workflow: WORKFLOW_LITIGE_AVOIR,
+    signaux_detection: {
+      description: 'Cas probable si :',
+      indices: [
+        { champ: 'BT-3', valeur: '381', message: 'TypeCode 381 = Avoir (note de crédit)' },
+        { champ: 'BT-25', presence: true, message: 'Référence à la facture initiale en litige (BT-25)' },
+      ],
+    },
+  },
+
+  'REF-LITIGE-RECTIF': {
+    id: 'REF-LITIGE-RECTIF',
+    categorie: 'Référence officielle AFNOR/DGFiP',
+    titre: 'Facture en litige + facture rectificative (Figure 7)',
+    description: 'L\'acheteur met F1 en litige. Le vendeur émet une facture rectificative F2 (TypeCode 384) qui annule et remplace F1. Paiement de F2 et statut « Encaissée » sur F1 et F2.',
+    profil_recommande: 'en',
+    profils_acceptes: ['bas', 'en', 'ext'],
+    contexte: 'Litige résolu par remplacement complet de la facture initiale (erreur substantielle nécessitant une refacturation totale).',
+    conditions: [
+      'L\'acheteur émet un statut « En litige » sur F1 avec motif',
+      'Le vendeur émet une facture rectificative F2 (TypeCode 384) référençant F1',
+      'F2 annule et remplace F1',
+      'L\'acheteur valide F2 et émet « Approuvée » sur F1 et F2',
+      'Paiement de F2 et statut « Encaissée » sur F1 ET F2',
+    ],
+    champs_requis_cle: ['BT-3','BT-25','BT-26'],
+    mentions_obligatoires: ['Facture rectificative F2 avec TypeCode 384','BT-25 = numéro de F1','BT-26 = date de F1'],
+    workflow: WORKFLOW_LITIGE_RECTIFICATIF,
+    signaux_detection: {
+      description: 'Cas probable si :',
+      indices: [
+        { champ: 'BT-3', valeur: '384', message: 'TypeCode 384 = Facture rectificative / corrective' },
+        { champ: 'BT-25', presence: true, message: 'Référence à la facture initiale (BT-25)' },
+      ],
+    },
+  },
+
+  'REF-DEJA-PAYEE': {
+    id: 'REF-DEJA-PAYEE',
+    categorie: 'Référence officielle AFNOR/DGFiP',
+    titre: 'Facture déjà payée par l\'acheteur ou un tiers (Figure 8)',
+    description: 'Le paiement est effectué AVANT l\'émission de la facture. La facture est créée a posteriori. Elle passe directement au statut « Encaissée » sans les étapes EN_CONTROLE / ACCEPTEE / PAIEMENT_TRANSMIS. Correspond au cas d\'usage XP-2.',
+    profil_recommande: 'bas',
+    profils_acceptes: ['bas', 'en', 'ext'],
+    contexte: 'Achats comptants, paiements à la commande, achats en ligne pré-payés. L\'encaissement (6a) précède la création de la facture (1).',
+    conditions: [
+      'Le paiement a été encaissé AVANT l\'émission de la facture',
+      'La facture mentionne "Acquitté" et le moyen de paiement (BT-81)',
+      'Pas d\'étapes EN_CONTROLE / ACCEPTEE / PAIEMENT_TRANSMIS',
+      'Statut « Encaissée » émis dès la transmission (6b) → PDP-R (6c) → CdD/PPF (7)',
+    ],
+    champs_requis_cle: ['BT-1','BT-2','BT-5','BT-20','BT-27','BT-44','BT-81','BT-112','BT-115'],
+    mentions_obligatoires: ['BT-20 = "Acquitté"','BT-81 = moyen de paiement utilisé','Solde à payer = 0'],
+    workflow: WORKFLOW_DEJA_PAYEE,
+    signaux_detection: {
+      description: 'Cas probable si :',
+      indices: [
+        { champ: 'BT-20', pattern: 'acquitté|payé|réglé|comptant', message: 'Mention "acquitté/payé" dans les conditions de paiement' },
+        { champ: 'BT-81', presence: true, message: 'Moyen de paiement renseigné (paiement déjà effectué)' },
+      ],
+    },
+  },
+
+  'REF-TIERS-PAYEUR': {
+    id: 'REF-TIERS-PAYEUR',
+    categorie: 'Référence officielle AFNOR/DGFiP',
+    titre: 'Facture à payer par un tiers désigné – OD ou PDP (Figure 9)',
+    description: 'Trois acteurs : Vendeur (PDP-E), Acheteur (PDP-R), Tiers Payeur (OD ou PDP). L\'acheteur valide la facture et instruit le tiers payeur. Le tiers effectue le règlement. Correspond aux cas XP-3, XP-7, XP-8, XP-9.',
+    profil_recommande: 'en',
+    profils_acceptes: ['en', 'ext'],
+    contexte: 'Affacturage, centralisation de trésorerie de groupe, carte d\'achat logée, paiement via OD (Opérateur de Dématérialisation) ou PDP tiers.',
+    conditions: [
+      'Le tiers payeur est identifié dans la facture (BG-10)',
+      'L\'IBAN de paiement (BT-84) est celui du vendeur (le tiers paie au vendeur)',
+      'L\'acheteur informe le tiers payeur après acceptation',
+      'Le tiers émet le statut « Paiement Transmis »',
+      'Le vendeur encaisse et informe le tiers de l\'encaissement',
+    ],
+    champs_requis_cle: ['BT-1','BT-2','BT-5','BT-27','BT-44','BT-59','BT-60','BT-84','BT-112','BT-115'],
+    mentions_obligatoires: ['Tiers payeur identifié (BG-10)','Mandat ou accord tripartite','IBAN du vendeur en BT-84'],
+    workflow: WORKFLOW_TIERS_PAYEUR,
+    signaux_detection: {
+      description: 'Cas probable si :',
+      indices: [
+        { champ: 'BT-59', presence: true, message: 'Tiers payeur identifié dans BG-10 (BT-59)' },
+        { champ: 'BT-60', presence: true, message: 'Identifiant du tiers payeur présent (BT-60)' },
+      ],
+    },
   },
 
   'REF-REJET': {
