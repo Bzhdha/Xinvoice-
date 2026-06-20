@@ -357,6 +357,21 @@ function creerEnteteFaturce(r) {
         <span class="badge-label">Conformité</span>
         <span class="badge-valeur">${score}%</span>
       </div>
+      ${(() => {
+        const det = r.casUsageDetectes;
+        const SEUIL = 5; // score minimum pour un match significatif (≥ 2 signaux forts)
+        if (!det || det.length === 0 || det[0].score < SEUIL) {
+          return `<div class="badge-cas-usage badge-cas-nominal"><span class="badge-label">Cas d'usage probable</span><div class="cas-liste"><span class="cas-item">Cas nominal</span></div></div>`;
+        }
+        const top = det.filter(c => c.score >= SEUIL * 0.6).slice(0, 2);
+        const total = top.reduce((s, c) => s + c.score, 0);
+        const multi = top.length > 1;
+        const items = top.map(c => {
+          const pct = multi ? `<span class="cas-pct">${Math.round(c.score / total * 100)}%</span>` : '';
+          return `<span class="cas-item">${escHtml(c.cu.titre)}${pct}</span>`;
+        }).join('');
+        return `<div class="badge-cas-usage"><span class="badge-label">Cas d'usage probable</span><div class="cas-liste">${items}</div></div>`;
+      })()}
       ${r.format === 'UBL' ? '<div class="badge-alerte">⚠ Format UBL</div>' : ''}
     </div>`;
   return el;
@@ -567,26 +582,9 @@ function renderSynthese(r) {
       </div>` : ''}
 
       ${r.notesDoc.length > 0 ? `
-      <div class="carte-synthese">
+      <div class="carte-synthese carte-notes">
         <h3>Notes</h3>
         ${r.notesDoc.map(n => `<p class="note-doc">${escHtml(n.contenu || '')}</p>`).join('')}
-      </div>` : ''}
-
-      ${r.casUsageDetectes.length > 0 ? `
-      <div class="carte-synthese carte-cas-usage">
-        <h3>Cas d'usage probable</h3>
-        ${r.casUsageDetectes.slice(0, 2).map(res => `
-          <div class="cu-mini">
-            <div class="cu-mini-titre">
-              <strong>${escHtml(res.cu.titre)}</strong>
-              <span class="badge-profil profil-${res.cu.profil_recommande}">${PROFILES[res.cu.profil_recommande]?.label}</span>
-            </div>
-            <p>${escHtml(res.cu.description)}</p>
-            <div class="cu-mini-indices">
-              ${res.indices_trouves.map(i => `<span class="indice-ok">✓ ${escHtml(i)}</span>`).join('')}
-            </div>
-            <button class="btn-lien" onclick="switchCasUsage('${res.id}')">Voir le flux →</button>
-          </div>`).join('')}
       </div>` : ''}
     </div>`;
   return el;
