@@ -828,12 +828,24 @@ dl { display: flex; flex-direction: column; gap: 6px; }
 .expl-profil p { font-size: .85rem; color: var(--gris-500); }
 
 /* ─── Cas d'usage ────────────────────────────────────────────────────────────── */
-.cas-usage-layout { display: grid; grid-template-columns: 280px 1fr; gap: var(--espace-lg); min-height: 600px; }
+.cas-usage-layout {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: var(--espace-lg);
+  height: calc(100vh - var(--header-hauteur) - 140px);
+  min-height: 500px;
+}
 
-.liste-cas-usage { position: sticky; top: 80px; align-self: start; }
-.liste-cas-usage h3 { margin-bottom: var(--espace-xs); }
-.sous-titre-cu { font-size: .8rem; color: var(--gris-500); margin-bottom: var(--espace-md); }
-.cu-liste { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0; }
+.liste-cas-usage {
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  height: 100%;
+  padding-right: var(--espace-xs);
+}
+.liste-cas-usage h3 { margin-bottom: var(--espace-xs); flex-shrink: 0; }
+.sous-titre-cu { font-size: .8rem; color: var(--gris-500); margin-bottom: var(--espace-md); flex-shrink: 0; }
+.cu-liste { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 0; flex: 1; min-height: 0; }
 .cu-categorie-groupe { list-style: none; margin-bottom: var(--espace-sm); }
 .cu-categorie-label {
   font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
@@ -856,7 +868,14 @@ dl { display: flex; flex-direction: column; gap: 6px; }
 .cu-item-id { font-family: var(--police-mono); font-size: .7rem; color: var(--gris-400); background: var(--gris-50, #f9fafb); border: 1px solid var(--gris-200); border-radius: 4px; padding: 1px 4px; flex-shrink: 0; }
 .cu-item-profil { }
 
-.detail-cas-usage { background: white; border: 1px solid var(--gris-200); border-radius: var(--rayon-xl); padding: var(--espace-xl); }
+.detail-cas-usage {
+  background: white;
+  border: 1px solid var(--gris-200);
+  border-radius: var(--rayon-xl);
+  padding: var(--espace-xl);
+  overflow-y: auto;
+  height: 100%;
+}
 
 .cu-detail-header { margin-bottom: var(--espace-lg); padding-bottom: var(--espace-lg); border-bottom: 1px solid var(--gris-100); }
 .cu-id-badge { font-family: var(--police-mono); font-size: .75rem; color: var(--gris-400); margin-bottom: 4px; }
