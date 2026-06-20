@@ -359,11 +359,13 @@ function creerEnteteFaturce(r) {
       </div>
       ${(() => {
         const det = r.casUsageDetectes;
-        const SEUIL = 5; // score minimum pour un match significatif (≥ 2 signaux forts)
-        if (!det || det.length === 0 || det[0].score < SEUIL) {
-          return `<div class="badge-cas-usage badge-cas-nominal"><span class="badge-label">Cas d'usage probable</span><div class="cas-liste"><span class="cas-item">Cas nominal</span></div></div>`;
-        }
-        const top = det.filter(c => c.score >= SEUIL * 0.6).slice(0, 2);
+        const SEUIL = 6;       // score minimum : ≥ 3 signaux forts confirmés
+        const DOMINANCE = 1.5; // le premier cas doit scorer au moins 1,5× le second
+        const nominal = `<div class="badge-cas-usage badge-cas-nominal"><span class="badge-label">Cas d'usage probable</span><div class="cas-liste"><span class="cas-item">Cas nominal</span></div></div>`;
+        if (!det || det.length === 0 || det[0].score < SEUIL) return nominal;
+        // Vérifier la dominance : évite les égalités sans valeur informative
+        if (det.length >= 2 && det[0].score < det[1].score * DOMINANCE) return nominal;
+        const top = det.filter(c => c.score >= det[0].score / DOMINANCE).slice(0, 2);
         const total = top.reduce((s, c) => s + c.score, 0);
         const multi = top.length > 1;
         const items = top.map(c => {
