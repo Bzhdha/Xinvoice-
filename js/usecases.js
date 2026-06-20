@@ -19,6 +19,7 @@ const ROLES = {
 const ETATS = {
   BROUILLON:          { id: 'BROUILLON',          label: 'Brouillon',                    color: '#94a3b8' },
   EMISE:              { id: 'EMISE',              label: 'Émise',                        color: '#3b82f6' },
+  TRANSMISE:          { id: 'TRANSMISE',          label: 'Transmise (via PDP)',           color: '#8b5cf6' },
   DEPOSEE:            { id: 'DEPOSEE',            label: 'Déposée (sur PDP-E)',          color: '#6366f1' },
   REJETEE:            { id: 'REJETEE',            label: 'Rejetée (technique PDP-E)',    color: '#f43f5e' },
   RECUE:              { id: 'RECUE',              label: 'Reçue (par PDP-R)',            color: '#f59e0b' },

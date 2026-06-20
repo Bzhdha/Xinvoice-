@@ -1256,7 +1256,7 @@ function renduDetailCasUsage(cu, r) {
             <label>État actuel de la facture :</label>
             <div class="etat-btns">
               ${cu.workflow.etats.map(eid => {
-                const etat = ETATS[eid];
+                const etat = ETATS[eid] || { label: eid, color: '#94a3b8' };
                 const actif = etatActif === eid;
                 return `<button class="btn-etat ${actif ? 'actif' : ''}"
                          style="${actif ? `background:${etat.color}20;border-color:${etat.color}` : ''}"
