@@ -20,11 +20,11 @@
         <span class="logo-sous">AFNOR NF Z55-500 · EN 16931</span>
       </div>
     </div>
-    <nav class="header-nav">
-      <a href="#section-accueil" class="nav-lien actif">Analyser</a>
-      <a href="#section-cas-usage" class="nav-lien">Cas d'usage</a>
-      <a href="#section-aide" class="nav-lien">Aide</a>
-    </nav>
+    <button id="btn-burger" class="burger-btn" aria-label="Menu" aria-expanded="false">
+      <span class="burger-barre"></span>
+      <span class="burger-barre"></span>
+      <span class="burger-barre"></span>
+    </button>
   </div>
 </header>
 
@@ -134,6 +134,38 @@
 
 </main>
 
+<!-- ── Menu burger ───────────────────────────────────────────────────────────── -->
+<div id="burger-overlay" class="burger-overlay"></div>
+<nav id="burger-menu" class="burger-menu" aria-hidden="true">
+  <div class="burger-menu-header">
+    <span class="burger-menu-titre">Menu</span>
+    <button id="btn-burger-fermer" class="burger-fermer" aria-label="Fermer le menu">✕</button>
+  </div>
+  <ul class="burger-liste">
+    <li>
+      <a href="#section-accueil" class="burger-item" data-nav>
+        <span class="burger-ico">🔍</span> Analyser une facture
+      </a>
+    </li>
+    <li>
+      <a href="#section-cas-usage" class="burger-item" data-nav>
+        <span class="burger-ico">💼</span> Cas d'usage &amp; workflows
+      </a>
+    </li>
+    <li>
+      <a href="#section-aide" class="burger-item" data-nav>
+        <span class="burger-ico">ℹ️</span> Guide d'utilisation
+      </a>
+    </li>
+    <li class="burger-separateur"></li>
+    <li>
+      <button id="btn-nouvelle-analyse" class="burger-item burger-item-action">
+        <span class="burger-ico">↩</span> Nouvelle analyse
+      </button>
+    </li>
+  </ul>
+</nav>
+
 <!-- ── Pied de page ──────────────────────────────────────────────────────────── -->
 <footer class="app-footer">
   <div class="footer-inner">
@@ -157,15 +189,54 @@
 <script src="js/app.js"></script>
 
 <script>
-  // Navigation par ancres
-  document.querySelectorAll('.nav-lien').forEach(lien => {
+  // ── Menu burger ──────────────────────────────────────────────────────────────
+  const burger     = document.getElementById('btn-burger');
+  const menu       = document.getElementById('burger-menu');
+  const overlay    = document.getElementById('burger-overlay');
+  const btnFermer  = document.getElementById('btn-burger-fermer');
+
+  function ouvrirMenu() {
+    menu.classList.add('ouvert');
+    overlay.classList.add('ouvert');
+    burger.classList.add('actif');
+    burger.setAttribute('aria-expanded', 'true');
+    menu.setAttribute('aria-hidden', 'false');
+  }
+
+  function fermerMenu() {
+    menu.classList.remove('ouvert');
+    overlay.classList.remove('ouvert');
+    burger.classList.remove('actif');
+    burger.setAttribute('aria-expanded', 'false');
+    menu.setAttribute('aria-hidden', 'true');
+  }
+
+  burger.addEventListener('click', () => menu.classList.contains('ouvert') ? fermerMenu() : ouvrirMenu());
+  overlay.addEventListener('click', fermerMenu);
+  btnFermer.addEventListener('click', fermerMenu);
+
+  // Navigation par ancres depuis le menu burger
+  document.querySelectorAll('.burger-item[data-nav]').forEach(lien => {
     lien.addEventListener('click', (e) => {
       e.preventDefault();
+      fermerMenu();
       const cible = document.querySelector(lien.getAttribute('href'));
-      if (cible) cible.scrollIntoView({ behavior: 'smooth' });
-      document.querySelectorAll('.nav-lien').forEach(l => l.classList.remove('actif'));
-      lien.classList.add('actif');
+      if (cible) setTimeout(() => cible.scrollIntoView({ behavior: 'smooth' }), 200);
     });
+  });
+
+  // Touche Échap pour fermer le menu
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') fermerMenu(); });
+
+  // Nouvelle analyse depuis le menu burger
+  document.getElementById('btn-nouvelle-analyse').addEventListener('click', () => {
+    fermerMenu();
+    if (typeof reinitialiser === 'function') {
+      setTimeout(() => {
+        reinitialiser();
+        document.getElementById('section-accueil')?.scrollIntoView({ behavior: 'smooth' });
+      }, 200);
+    }
   });
 
   // Activer le worker PDF.js après chargement
