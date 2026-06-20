@@ -451,6 +451,101 @@ dl { display: flex; flex-direction: column; gap: 6px; }
 
 .valeur-champ { word-break: break-all; }
 .valeur-absente { color: var(--gris-400); font-style: italic; font-size: .85rem; }
+
+/* ─── Onglet Champs BT/BG par cas d'usage ────────────────────────────────────── */
+.champs-uc-header {
+  display: flex; flex-direction: column; gap: 10px;
+  background: var(--gris-50); border: 1px solid var(--gris-200);
+  border-radius: var(--rayon-lg); padding: 12px 16px; margin-bottom: 14px;
+}
+.champs-uc-top-row {
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+}
+.champs-uc-selector-wrap { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 300px; }
+.champs-uc-label { font-weight: 600; font-size: .85rem; color: var(--gris-700); white-space: nowrap; }
+.champs-uc-selector-wrap select {
+  flex: 1; padding: 6px 10px; border: 1px solid var(--gris-300);
+  border-radius: var(--rayon-md); font-size: .84rem; background: white;
+  max-width: 480px;
+}
+.champs-legende { display: flex; flex-wrap: wrap; gap: 6px; }
+.legende-chip {
+  padding: 3px 10px; border-radius: 12px; font-size: .77rem; font-weight: 600; border: 1px solid;
+}
+.legende-chip.vert  { background: var(--vert-clair);  border-color: var(--vert-bord);  color: var(--vert); }
+.legende-chip.rouge { background: var(--rouge-clair); border-color: var(--rouge-bord); color: var(--rouge); }
+.legende-chip.ambre { background: var(--orange-clair);border-color: var(--orange-bord);color: var(--orange); }
+.legende-chip.bleu  { background: var(--bleu-clair);  border-color: var(--bleu-bord);  color: var(--bleu); }
+.legende-chip.gris  { background: var(--gris-100);    border-color: var(--gris-300);   color: var(--gris-500); }
+
+/* BG accordion */
+.bg-groupe {
+  border: 1px solid var(--gris-200); border-radius: var(--rayon-lg);
+  margin-bottom: 6px; overflow: hidden;
+}
+.bg-groupe-titre {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 14px; cursor: pointer; background: var(--gris-50);
+  font-size: .875rem; list-style: none; user-select: none;
+}
+.bg-groupe-titre::-webkit-details-marker { display: none; }
+.bg-groupe-titre:hover { background: var(--gris-100); }
+.bg-groupe[open] > .bg-groupe-titre { border-bottom: 1px solid var(--gris-200); background: white; }
+.bg-expand-ico {
+  font-size: .7rem; color: var(--gris-400); transition: transform .18s; flex-shrink: 0;
+  display: inline-block;
+}
+.bg-groupe[open] > .bg-groupe-titre .bg-expand-ico { transform: rotate(90deg); }
+.bg-code { font-family: var(--police-mono); font-size: .78rem; color: var(--gris-400); flex-shrink: 0; }
+.bg-label-txt { font-weight: 600; color: var(--gris-900); flex: 1; }
+.bg-compteurs { display: flex; gap: 4px; margin-left: auto; flex-shrink: 0; }
+.compteur {
+  padding: 1px 7px; border-radius: 10px; font-size: .73rem; font-weight: 700;
+}
+.compteur.vert  { background: var(--vert-clair);   color: var(--vert); }
+.compteur.rouge { background: var(--rouge-clair);  color: var(--rouge); }
+.compteur.ambre { background: var(--orange-clair); color: var(--orange); }
+.compteur.bleu  { background: var(--bleu-clair);   color: var(--bleu); }
+.compteur.gris  { background: var(--gris-100); color: var(--gris-400); font-style: italic; font-weight: 400; font-size: .72rem; }
+
+/* BT cards grid */
+.bt-grille {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(168px, 1fr));
+  gap: 5px; padding: 10px 12px;
+}
+.bt-card {
+  padding: 8px 10px; border-radius: var(--rayon-md); border: 1px solid;
+  font-size: .82rem; cursor: default; transition: transform .1s, box-shadow .1s;
+}
+.bt-card:hover { transform: translateY(-2px); box-shadow: 0 3px 8px rgba(0,0,0,.1); }
+.bt-card.statut-vert  { background: var(--vert-clair);   border-color: var(--vert-bord); }
+.bt-card.statut-rouge { background: var(--rouge-clair);  border-color: var(--rouge-bord); }
+.bt-card.statut-ambre { background: var(--orange-clair); border-color: var(--orange-bord); }
+.bt-card.statut-bleu  { background: var(--bleu-clair);   border-color: var(--bleu-bord); }
+.bt-card.statut-gris  { background: var(--gris-50);      border-color: var(--gris-200); opacity: .6; }
+.bt-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.bt-card-code { font-family: var(--police-mono); font-size: .78rem; font-weight: 700; }
+.statut-vert  .bt-card-code { color: var(--vert); }
+.statut-rouge .bt-card-code { color: var(--rouge); }
+.statut-ambre .bt-card-code { color: var(--orange); }
+.statut-bleu  .bt-card-code { color: var(--bleu); }
+.statut-gris  .bt-card-code { color: var(--gris-400); }
+.bt-card-ico { font-weight: 700; font-size: .9rem; flex-shrink: 0; }
+.statut-vert  .bt-card-ico { color: var(--vert); }
+.statut-rouge .bt-card-ico { color: var(--rouge); }
+.statut-ambre .bt-card-ico { color: var(--orange); }
+.statut-bleu  .bt-card-ico { color: var(--bleu); }
+.statut-gris  .bt-card-ico { color: var(--gris-300); }
+.bt-card-label { font-size: .77rem; color: var(--gris-700); line-height: 1.25; margin-bottom: 2px; }
+.statut-gris  .bt-card-label { color: var(--gris-400); }
+.statut-ambre .bt-card-label { color: var(--gris-600); }
+.bt-card-val {
+  font-size: .73rem; margin-top: 3px; font-style: italic;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.statut-vert  .bt-card-val { color: var(--vert); }
+.statut-ambre .bt-card-val { color: var(--orange); }
+.statut-bleu  .bt-card-val { color: var(--bleu); }
 .condition-txt { color: var(--orange); }
 .code-list-badge { font-size: .7rem; background: var(--violet-clair); color: var(--violet); padding: 1px 6px; border-radius: 999px; margin-left: 6px; }
 
@@ -618,13 +713,98 @@ dl { display: flex; flex-direction: column; gap: 6px; }
   padding: 8px 10px; border-radius: var(--rayon-md);
   font-size: .85rem; border: 1px solid;
 }
-.champ-requis-item.present { background: var(--vert-clair); border-color: var(--vert-bord); }
-.champ-requis-item.absent  { background: var(--rouge-clair); border-color: var(--rouge-bord); }
-.champ-requis-ico { font-weight: 700; flex-shrink: 0; }
-.present .champ-requis-ico { color: var(--vert); }
-.absent .champ-requis-ico  { color: var(--rouge); }
+.champ-requis-item.present   { background: var(--vert-clair); border-color: var(--vert-bord); }
+.champ-requis-item.absent    { background: var(--rouge-clair); border-color: var(--rouge-bord); }
+.champ-requis-item.distinctif { background: var(--bleu-clair); border-color: var(--bleu-bord); }
+.champ-requis-ico { font-weight: 700; flex-shrink: 0; font-size: .9rem; }
+.present .champ-requis-ico    { color: var(--vert); }
+.absent .champ-requis-ico     { color: var(--rouge); }
+.distinctif .champ-requis-ico { color: var(--bleu); }
+.champ-requis-corps { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .champ-requis-item code { flex-shrink: 0; }
 .champ-requis-item em { display: block; font-size: .75rem; color: var(--gris-400); font-style: normal; margin-top: 2px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.champ-note-distinctif { color: var(--bleu) !important; white-space: normal !important; line-height: 1.3; }
+.champ-val-actuelle { color: var(--vert) !important; }
+
+/* ─── Tooltip BT enrichi ─────────────────────────────────────────────────────── */
+#bt-tooltip {
+  position: fixed; z-index: 9999; pointer-events: none;
+  background: white; border: 1px solid var(--gris-200);
+  border-radius: var(--rayon-lg); box-shadow: 0 8px 28px rgba(0,0,0,.14);
+  padding: 12px 16px; max-width: 340px; min-width: 200px; font-size: .84rem;
+}
+#bt-tooltip .tip-code {
+  font-family: var(--police-mono); font-size: .75rem; font-weight: 700;
+  color: var(--bleu); margin-bottom: 3px;
+}
+#bt-tooltip .tip-label {
+  font-weight: 700; color: var(--gris-900); font-size: .9rem; margin-bottom: 8px;
+  line-height: 1.25;
+}
+#bt-tooltip .tip-aide {
+  color: var(--gris-700); line-height: 1.5; font-size: .83rem;
+}
+#bt-tooltip .tip-valeurs {
+  border-top: 1px solid var(--gris-100); margin-top: 10px; padding-top: 8px;
+}
+#bt-tooltip .tip-valeurs-titre {
+  font-size: .72rem; font-weight: 700; color: var(--gris-400);
+  text-transform: uppercase; letter-spacing: .04em; margin-bottom: 6px;
+}
+#bt-tooltip .tip-valeur {
+  display: flex; gap: 8px; margin-bottom: 5px; font-size: .8rem; align-items: flex-start;
+}
+#bt-tooltip .tip-vcode {
+  font-family: var(--police-mono); font-weight: 700; color: var(--bleu);
+  flex-shrink: 0; min-width: 36px; padding-top: 1px;
+}
+#bt-tooltip .tip-vlibelle { color: var(--gris-700); line-height: 1.35; }
+
+/* ─── Tableau données conditionnelles ─────────────────────────────────────────── */
+.tableau-conditionnel {
+  width: 100%; border-collapse: collapse; font-size: .82rem; margin-top: 8px;
+  border: 1px solid var(--gris-200); border-radius: var(--rayon-md); overflow: hidden;
+}
+.tableau-conditionnel th {
+  background: var(--gris-100); padding: 8px 12px; text-align: left;
+  font-weight: 600; font-size: .8rem; color: var(--gris-700);
+  border-bottom: 2px solid var(--gris-200);
+}
+.tableau-conditionnel th:first-child { width: 42%; }
+.tableau-conditionnel td { padding: 8px 12px; border-bottom: 1px solid var(--gris-100); vertical-align: top; }
+.tableau-conditionnel tr:last-child td { border-bottom: none; }
+.tableau-conditionnel tr:hover td { background: var(--gris-50); }
+.bloc-condition-titre { font-weight: 600; color: var(--gris-900); margin-bottom: 2px; }
+.bloc-condition-texte { font-size: .78rem; color: var(--gris-500); line-height: 1.3; }
+.bt-chips-groupe { display: flex; flex-wrap: wrap; gap: 4px; }
+.bt-chip {
+  display: inline-flex; align-items: center; gap: 2px;
+  padding: 2px 7px; border-radius: 10px; font-size: .77rem;
+  border: 1px solid; cursor: default; white-space: nowrap;
+}
+.bt-chip.neutre   { background: var(--bleu-clair);   border-color: var(--bleu-bord);   color: var(--bleu); }
+.bt-chip.present  { background: var(--vert-clair);   border-color: var(--vert-bord);   color: var(--vert); }
+.bt-chip.absent   { background: var(--gris-100);     border-color: var(--gris-300);    color: var(--gris-500); }
+.bt-chip code { font-size: .76rem; background: none; padding: 0; }
+
+/* ─── Champs recommandés ──────────────────────────────────────────────────────── */
+.grille-recommandes {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 8px; margin-top: 8px;
+}
+.champ-recommande {
+  padding: 8px 10px; border-radius: var(--rayon-md); font-size: .82rem;
+  border: 1px dashed var(--gris-300); background: var(--gris-50);
+}
+.champ-recommande.present { border-color: var(--vert-bord); background: var(--vert-clair); }
+.champ-recommande.absent  { border-style: dashed; }
+.recommande-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 3px; }
+.recommande-bt { font-size: .8rem; color: var(--bleu); }
+.recommande-ico { font-weight: 700; font-size: .85rem; }
+.champ-recommande.present .recommande-ico { color: var(--vert); }
+.champ-recommande.absent  .recommande-ico { color: var(--gris-400); }
+.recommande-label { font-weight: 500; color: var(--gris-700); font-size: .8rem; margin-bottom: 2px; }
+.recommande-raison { font-size: .75rem; color: var(--gris-500); line-height: 1.3; }
+.recommande-val { font-size: .75rem; color: var(--vert); margin-top: 2px; font-style: italic; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
 /* ─── Workflow ────────────────────────────────────────────────────────────────── */
 .cu-workflow h3 { font-size: 1.1rem; }
@@ -708,6 +888,35 @@ dl { display: flex; flex-direction: column; gap: 6px; }
 .btn-copier:hover { background: var(--gris-700); }
 .xml-conteneur { background: var(--gris-900); border-radius: var(--rayon-lg); overflow: auto; max-height: 600px; }
 .xml-code { padding: var(--espace-lg); color: #e2e8f0; font-family: var(--police-mono); font-size: .8rem; line-height: 1.7; white-space: pre; }
+
+/* ─── XML annoté par BT ──────────────────────────────────────────────────────── */
+.xml-annote {
+  background: #1e1e2e; border-radius: var(--rayon-lg);
+  border: 1px solid var(--gris-200); overflow: auto; max-height: 65vh;
+  font-family: var(--police-mono); font-size: .8rem; line-height: 1.7;
+}
+.xml-row { display: flex; align-items: stretch; }
+.xml-row:hover { background: rgba(255,255,255,.04); }
+.xml-bt-col {
+  width: 74px; min-width: 74px;
+  display: flex; align-items: flex-start; justify-content: flex-end;
+  padding: 0 5px; gap: 2px; flex-wrap: wrap; align-content: flex-start;
+  border-right: 1px solid rgba(255,255,255,.07);
+  background: rgba(0,0,0,.25);
+}
+.xbt-badge {
+  font-size: .66rem; padding: 1px 4px; border-radius: 3px;
+  background: #3b82f6; color: #fff; cursor: default;
+  font-weight: 700; white-space: nowrap; line-height: 1.7;
+  transition: background .15s;
+}
+.xbt-badge:hover { background: #2563eb; }
+.xml-code-col {
+  flex: 1; padding: 0 14px; white-space: pre; color: #cdd6f4; overflow-x: visible;
+}
+.xc-tag   { color: #89b4fa; }   /* bleu clair – noms de balises */
+.xc-aname { color: #a6e3a1; }   /* vert – noms d'attributs */
+.xc-aval  { color: #f9e2af; }   /* jaune – valeurs d'attributs */
 
 /* ─── Infos profils accueil ──────────────────────────────────────────────────── */
 .section-info-profils { margin-top: var(--espace-2xl); }

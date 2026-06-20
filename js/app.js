@@ -2,6 +2,195 @@
  * Application FacturX Analyzer – logique principale (tout en français)
  */
 
+// ─── Aide simplifiée par BT (pour assistantes ventes / paiements) ─────────────
+const BT_AIDE = {
+  /* ── Identification facture ── */
+  'BT-1':  { aide: 'Le numéro unique qui identifie cette facture. Chaque facture émise doit avoir un numéro distinct et chronologique.' },
+  'BT-2':  { aide: 'La date à laquelle la facture a été émise par le fournisseur.' },
+  'BT-3':  { aide: 'Le type de document envoyé.',
+    valeurs: [
+      { code:'380', libelle:'Facture – document de vente standard' },
+      { code:'381', libelle:'Avoir – remboursement ou annulation partielle d\'une facture' },
+      { code:'384', libelle:'Facture corrective – corrige et remplace une facture erronée' },
+      { code:'386', libelle:'Facture d\'acompte – paiement partiel demandé avant la livraison' },
+      { code:'383', libelle:'Note de débit – somme réclamée par l\'acheteur au vendeur' },
+      { code:'532', libelle:'Facture pour livraison ou prestation partielle' },
+    ]},
+  'BT-5':  { aide: 'La monnaie dans laquelle sont exprimés tous les montants de la facture.',
+    valeurs: [
+      { code:'EUR', libelle:'Euro (France et zone euro)' },
+      { code:'USD', libelle:'Dollar américain' },
+      { code:'GBP', libelle:'Livre sterling (Royaume-Uni)' },
+      { code:'CHF', libelle:'Franc suisse' },
+    ]},
+  'BT-9':  { aide: 'La date limite avant laquelle le paiement doit être reçu par le fournisseur.' },
+  'BT-10': { aide: 'La référence interne de l\'acheteur à faire figurer sur la facture (code service, centre de coût, numéro d\'imputation…).' },
+  'BT-11': { aide: 'Le numéro du projet ou du marché auquel se rattache cette facture.' },
+  'BT-12': { aide: 'Le numéro du contrat commercial entre le fournisseur et l\'acheteur.' },
+  'BT-13': { aide: 'Le numéro du bon de commande émis par l\'acheteur pour cet achat.' },
+  'BT-14': { aide: 'Le numéro de commande émis par le fournisseur (numéro d\'ordre de vente).' },
+  'BT-15': { aide: 'Le numéro de l\'avis de réception signé par l\'acheteur à la livraison.' },
+  'BT-16': { aide: 'Le numéro du bon de livraison ou avis d\'expédition du fournisseur.' },
+  'BT-19': { aide: 'La référence comptable fournie par l\'acheteur pour imputer la charge dans sa comptabilité.' },
+  'BT-20': { aide: 'Le texte décrivant les délais et conditions de paiement (ex : "30 jours net", "Paiement à réception", "Escompte 2% si paiement avant le 10").' },
+  'BT-22': { aide: 'Un commentaire ou une information complémentaire libre ajouté à la facture (mentions légales, instructions, précisions…).' },
+  'BT-25': { aide: 'Le numéro de la facture d\'origine à laquelle ce document fait référence (ex : numéro de la facture initiale pour un avoir ou une facture corrective).' },
+  'BT-26': { aide: 'La date de la facture d\'origine référencée.' },
+  /* ── Fournisseur ── */
+  'BT-27': { aide: 'Le nom officiel (raison sociale) de l\'entreprise qui émet la facture (le fournisseur).' },
+  'BT-28': { aide: 'Le nom commercial ou l\'enseigne du fournisseur, s\'il diffère de la raison sociale.' },
+  'BT-29': { aide: 'Un identifiant propre au fournisseur (numéro client, code interne…).' },
+  'BT-30': { aide: 'Le numéro SIREN (9 chiffres) ou SIRET (14 chiffres) du fournisseur, attribué par l\'INSEE et servant à l\'identifier légalement en France.' },
+  'BT-31': { aide: 'Le numéro de TVA intracommunautaire du fournisseur (format FR suivi de 2 chiffres puis du SIREN). Obligatoire pour les factures soumises à TVA.' },
+  'BT-32': { aide: 'Un autre identifiant fiscal du fournisseur (numéro fiscal national, si différent du numéro TVA).' },
+  'BT-33': { aide: 'Informations juridiques complémentaires du fournisseur (forme juridique, montant du capital, numéro RCS…).' },
+  'BT-34': { aide: 'L\'adresse e-mail du fournisseur utilisée pour la transmission électronique de la facture.' },
+  'BT-41': { aide: 'Le nom de la personne à contacter chez le fournisseur pour toute question sur la facture.' },
+  'BT-42': { aide: 'Le numéro de téléphone du contact chez le fournisseur.' },
+  'BT-43': { aide: 'L\'adresse e-mail du contact chez le fournisseur.' },
+  /* ── Acheteur ── */
+  'BT-44': { aide: 'Le nom officiel (raison sociale) de l\'entreprise qui reçoit la facture (l\'acheteur).' },
+  'BT-45': { aide: 'Le nom commercial ou l\'enseigne de l\'acheteur.' },
+  'BT-46': { aide: 'Un identifiant propre à l\'acheteur (numéro fournisseur, code interne…).' },
+  'BT-47': { aide: 'Le numéro SIREN ou SIRET de l\'acheteur.' },
+  'BT-48': { aide: 'Le numéro de TVA intracommunautaire de l\'acheteur.' },
+  'BT-49': { aide: 'L\'adresse e-mail de l\'acheteur pour la réception électronique de la facture.' },
+  'BT-56': { aide: 'Le nom de la personne à contacter chez l\'acheteur.' },
+  'BT-57': { aide: 'Le numéro de téléphone du contact chez l\'acheteur.' },
+  'BT-58': { aide: 'L\'adresse e-mail du contact chez l\'acheteur.' },
+  /* ── Bénéficiaire du paiement ── */
+  'BT-59': { aide: 'Le nom de la personne ou société qui doit recevoir le paiement, si différent du fournisseur (ex : société d\'affacturage, organisme payeur tiers).' },
+  'BT-60': { aide: 'L\'identifiant de la tierce partie bénéficiaire du paiement.' },
+  'BT-61': { aide: 'Le numéro légal (SIREN/SIRET) de la tierce partie bénéficiaire.' },
+  /* ── Représentant fiscal ── */
+  'BT-62': { aide: 'Le nom du représentant fiscal du fournisseur dans le pays de taxation (utile pour les fournisseurs étrangers sans établissement en France).' },
+  'BT-63': { aide: 'Le numéro de TVA du représentant fiscal du fournisseur.' },
+  /* ── Livraison ── */
+  'BT-70': { aide: 'Le nom de la personne, du service ou du site qui reçoit physiquement les marchandises ou la prestation.' },
+  'BT-71': { aide: 'L\'identifiant du lieu de livraison (numéro GLN, code entrepôt…).' },
+  'BT-72': { aide: 'La date à laquelle les marchandises ont été effectivement livrées ou la prestation réalisée.' },
+  'BT-73': { aide: 'La date de début de la période couverte par la facturation (pour les abonnements, loyers, prestations continues…).' },
+  'BT-74': { aide: 'La date de fin de la période couverte par cette facture.' },
+  /* ── Paiement ── */
+  'BT-81': { aide: 'Le moyen par lequel le paiement doit être ou a été effectué.',
+    valeurs: [
+      { code:'10',  libelle:'Espèces' },
+      { code:'20',  libelle:'Chèque' },
+      { code:'30',  libelle:'Virement bancaire (ordre de virement classique)' },
+      { code:'48',  libelle:'Carte bancaire' },
+      { code:'49',  libelle:'Prélèvement automatique' },
+      { code:'57',  libelle:'Virement permanent' },
+      { code:'58',  libelle:'Virement SEPA (zone euro)' },
+      { code:'59',  libelle:'Prélèvement SEPA (zone euro)' },
+    ]},
+  'BT-82': { aide: 'Un texte libre précisant les modalités ou instructions de paiement.' },
+  'BT-83': { aide: 'La référence à indiquer dans le libellé du virement pour que le fournisseur identifie le règlement (souvent le numéro de facture).' },
+  'BT-84': { aide: 'Le numéro IBAN du compte bancaire sur lequel le virement doit être effectué.' },
+  'BT-85': { aide: 'Le nom du titulaire du compte bancaire bénéficiaire du paiement.' },
+  'BT-86': { aide: 'Le code BIC/SWIFT identifiant la banque du bénéficiaire (8 ou 11 caractères).' },
+  'BT-87': { aide: 'Les 4 derniers chiffres de la carte bancaire utilisée (pas le numéro complet — uniquement pour permettre la traçabilité du paiement).' },
+  'BT-88': { aide: 'Le nom du titulaire de la carte bancaire utilisée pour le paiement.' },
+  'BT-89': { aide: 'La référence unique du mandat autorisant le fournisseur à prélever le compte de l\'acheteur.' },
+  'BT-90': { aide: 'L\'Identifiant Créancier SEPA (ICS) du fournisseur, attribué par sa banque, nécessaire pour les prélèvements.' },
+  'BT-91': { aide: 'L\'IBAN du compte bancaire de l\'acheteur qui sera prélevé.' },
+  /* ── Remises et frais ── */
+  'BT-92': { aide: 'Le montant de la remise accordée sur l\'ensemble de la facture (remise globale, hors remises par ligne).' },
+  'BT-93': { aide: 'Le montant de base sur lequel le pourcentage de remise est calculé.' },
+  'BT-94': { aide: 'Le pourcentage de remise accordé (ex : 5 pour 5%).' },
+  'BT-97': { aide: 'L\'explication de la remise accordée (ex : "Remise fidélité", "Remise volume", "Escompte").' },
+  'BT-99': { aide: 'Le montant des frais supplémentaires ajoutés à la facture (ex : frais de livraison, frais de dossier).' },
+  'BT-104':{ aide: 'L\'explication des frais ajoutés (ex : "Frais de livraison express", "Frais de dossier").' },
+  /* ── Totaux ── */
+  'BT-106':{ aide: 'La somme des montants HT de toutes les lignes de la facture avant application des remises et frais globaux.' },
+  'BT-107':{ aide: 'Le total des remises accordées sur l\'ensemble de la facture.' },
+  'BT-108':{ aide: 'Le total des frais ajoutés sur l\'ensemble de la facture.' },
+  'BT-109':{ aide: 'Le montant total de la facture hors TVA (base de calcul de la TVA).' },
+  'BT-110':{ aide: 'Le montant total de TVA à payer sur cette facture.' },
+  'BT-112':{ aide: 'Le montant total à payer TVA incluse (= total HT + TVA).' },
+  'BT-113':{ aide: 'Les sommes déjà versées (acomptes) qui sont déduites du total TTC.' },
+  'BT-115':{ aide: 'Le montant exact restant à payer par l\'acheteur, après déduction des acomptes éventuels.' },
+  /* ── TVA ── */
+  'BT-116':{ aide: 'Le montant sur lequel s\'applique le taux de TVA pour cette catégorie (base imposable).' },
+  'BT-117':{ aide: 'Le montant de TVA calculé pour cette catégorie de taux.' },
+  'BT-118':{ aide: 'La catégorie de TVA applicable à cette opération ou cette ligne.',
+    valeurs: [
+      { code:'S',  libelle:'TVA standard (20%, 10%, 5,5% ou 2,1% selon le produit ou service)' },
+      { code:'Z',  libelle:'TVA à taux zéro (opération taxable mais à 0%)' },
+      { code:'E',  libelle:'Exonéré de TVA (santé, éducation, certaines associations…)' },
+      { code:'AE', libelle:'Autoliquidation : c\'est l\'acheteur qui déclare et paie la TVA (BTP sous-traitance, achats intracommunautaires)' },
+      { code:'K',  libelle:'Livraison à un client assujetti dans un autre pays de l\'UE (exonérée en France)' },
+      { code:'G',  libelle:'Exportation hors Union Européenne (exonérée de TVA française)' },
+      { code:'O',  libelle:'Hors champ TVA (dividendes, subventions, opérations non taxables)' },
+      { code:'M',  libelle:'Régime de la marge : TVA calculée sur la marge du revendeur, pas sur le prix total (biens d\'occasion, antiquités)' },
+    ]},
+  'BT-119':{ aide: 'Le taux de TVA appliqué en pourcentage.',
+    valeurs: [
+      { code:'20',  libelle:'20% – Taux normal (la plupart des biens et services)' },
+      { code:'10',  libelle:'10% – Taux intermédiaire (restauration, hébergement, travaux résidentiels, droits d\'auteur…)' },
+      { code:'5.5', libelle:'5,5% – Taux réduit (produits alimentaires, livres, équipements pour personnes handicapées…)' },
+      { code:'2.1', libelle:'2,1% – Taux super-réduit (médicaments remboursables, presse)' },
+      { code:'0',   libelle:'0% – Opération à taux zéro' },
+    ]},
+  'BT-120':{ aide: 'L\'explication en clair de la raison pour laquelle cette opération n\'est pas soumise à TVA (obligatoire si la catégorie TVA est "Exonéré").' },
+  'BT-121':{ aide: 'Le code officiel du motif d\'exonération de TVA.',
+    valeurs: [
+      { code:'VATEX-EU-AE',        libelle:'Autoliquidation (BTP sous-traitance, achats intracommunautaires de services)' },
+      { code:'VATEX-EU-IC',        libelle:'Livraison intracommunautaire exonérée (vente à un assujetti d\'un autre pays UE)' },
+      { code:'VATEX-EU-G',         libelle:'Exportation hors Union Européenne' },
+      { code:'VATEX-EU-O',         libelle:'Hors champ de la TVA' },
+      { code:'VATEX-FR-FRANCHISE', libelle:'Franchise en base de TVA (petite entreprise sous seuil de chiffre d\'affaires)' },
+    ]},
+  /* ── Documents justificatifs ── */
+  'BT-122':{ aide: 'La référence ou le nom d\'un document annexe joint ou lié à la facture (bon de livraison, devis, contrat, rapport d\'intervention…).' },
+  'BT-123':{ aide: 'La description du document annexe référencé.' },
+  'BT-124':{ aide: 'Le lien internet permettant d\'accéder au document annexe.' },
+};
+
+// ─── Tooltip BT enrichi ───────────────────────────────────────────────────────
+function initTooltipBT() {
+  const tip = document.createElement('div');
+  tip.id = 'bt-tooltip';
+  tip.style.display = 'none';
+  document.body.appendChild(tip);
+
+  document.addEventListener('mouseover', (e) => {
+    const cible = e.target.closest('[data-bt-id]');
+    if (!cible) { tip.style.display = 'none'; return; }
+    const btId = cible.dataset.btId;
+    const field = FIELDS[btId];
+    if (!field) return;
+    const aide = BT_AIDE[btId];
+    const label = (field.label || '').replace(' ★', '');
+    let html = `<div class="tip-code">${escHtml(btId)}</div><div class="tip-label">${escHtml(label)}</div>`;
+    const texte = aide?.aide || field.description || '';
+    if (texte) html += `<div class="tip-aide">${escHtml(texte)}</div>`;
+    if (aide?.valeurs?.length) {
+      html += `<div class="tip-valeurs"><div class="tip-valeurs-titre">Valeurs possibles</div>` +
+        aide.valeurs.map(v =>
+          `<div class="tip-valeur"><span class="tip-vcode">${escHtml(v.code)}</span><span class="tip-vlibelle">${escHtml(v.libelle)}</span></div>`
+        ).join('') + `</div>`;
+    }
+    tip.innerHTML = html;
+    tip.style.display = 'block';
+    _positionTooltip(e);
+  });
+
+  document.addEventListener('mousemove', (e) => {
+    if (tip.style.display !== 'none') _positionTooltip(e);
+  });
+
+  document.addEventListener('mouseleave', () => { tip.style.display = 'none'; }, true);
+
+  function _positionTooltip(e) {
+    const m = 14, tw = tip.offsetWidth, th = tip.offsetHeight;
+    let x = e.clientX + m, y = e.clientY + m;
+    if (x + tw > window.innerWidth  - m) x = e.clientX - tw - m;
+    if (y + th > window.innerHeight - m) y = e.clientY - th - m;
+    tip.style.left = Math.max(m, x) + 'px';
+    tip.style.top  = Math.max(m, y) + 'px';
+  }
+}
+
 // ─── État global ─────────────────────────────────────────────────────────────
 let etatApp = {
   resultat: null,
@@ -11,6 +200,7 @@ let etatApp = {
   roleSelectionne: null,
   etatWorkflowSelectionne: null,
   xmlVisible: false,
+  ucChampsSelectionne: 'REF-NOMINAL',
 };
 
 // ─── Initialisation ───────────────────────────────────────────────────────────
@@ -18,6 +208,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initDragDrop();
   initOnglets();
   initCasUsage();
+  initTooltipBT();
   document.getElementById('btn-explorer-exemple').addEventListener('click', chargerExemple);
 });
 
@@ -81,6 +272,9 @@ function afficherResultats(r) {
   const sec = document.getElementById('section-resultats');
   sec.innerHTML = '';
 
+  // L'onglet Champs démarre toujours sur le cas nominal de référence
+  etatApp.ucChampsSelectionne = 'REF-NOMINAL';
+
   // En-tête facture
   sec.appendChild(creerEnteteFaturce(r));
 
@@ -109,7 +303,8 @@ function afficherResultats(r) {
 
 function reinitialiser() {
   etatApp = { resultat: null, ongletActif: 'synthese', profilCompare: null,
-    casUsageSelectionne: null, roleSelectionne: null, etatWorkflowSelectionne: null, xmlVisible: false };
+    casUsageSelectionne: null, roleSelectionne: null, etatWorkflowSelectionne: null,
+    xmlVisible: false, ucChampsSelectionne: 'REF-NOMINAL' };
   document.getElementById('zone-depot').classList.remove('cache');
   document.getElementById('section-resultats').classList.add('cache');
   document.getElementById('section-resultats').innerHTML = '';
@@ -129,7 +324,7 @@ function creerEnteteFaturce(r) {
       <div class="entete-numero">
         <span class="label-petit">Facture</span>
         <span class="valeur-grande">${escHtml(v('BT-1') || '–')}</span>
-        <span class="date-facture">${escHtml(v('BT-2') || '')}</span>
+        ${v('BT-2') ? `<span class="date-facture"><span class="label-petit">Date d'émission</span> ${escHtml(v('BT-2'))}</span>` : ''}
       </div>
       <div class="entete-parties">
         <div class="partie vendeur">
@@ -154,10 +349,6 @@ function creerEnteteFaturce(r) {
       </div>
     </div>
     <div class="entete-meta">
-      <div class="badge-profil profil-${r.profilDetecte || 'inconnu'}">
-        <span class="badge-label">Profil</span>
-        <span class="badge-valeur">${escHtml(profil.label)}</span>
-      </div>
       <div class="badge-type">
         <span class="badge-label">Type</span>
         <span class="badge-valeur">${descriptionTypeCode(v('BT-3'))}</span>
@@ -416,127 +607,183 @@ function afficherCodePaiement(bt, val) {
 }
 
 // ─── Onglet Champs BT/BG ─────────────────────────────────────────────────────
+
+// Champs obligatoires pour un cas d'usage (génèrent rouge si absents).
+// Source prioritaire : REGLES_PRESENCE (regles.js).
+// Fallback : profil M + champs_requis_cle + champs_distinctifs (sans blocs_conditionnels).
+function getBTsObligatoires(cuId) {
+  const regle = REGLES_PRESENCE?.cas?.[cuId];
+  if (regle) return new Set(regle.obligatoires);
+
+  const obligatoires = new Set();
+  const cu = USE_CASES[cuId];
+  if (!cu) return obligatoires;
+  const profil = cu.profil_recommande || 'en';
+  Object.entries(FIELDS).forEach(([btId, f]) => {
+    if (f.profiles[profil] === 'M') obligatoires.add(btId);
+  });
+  (cu.champs_requis_cle || []).forEach(bt => obligatoires.add(bt));
+  (cu.champs_distinctifs || []).forEach(item =>
+    obligatoires.add(typeof item === 'string' ? item : item.bt)
+  );
+  return obligatoires;
+}
+
+// Champs conditionnels pour un cas d'usage (génèrent ambre si absents, jamais rouge).
+// Source prioritaire : REGLES_PRESENCE (regles.js).
+// Fallback : tous les BTs des blocs_conditionnels du cas.
+function getBTsConditionnels(cuId) {
+  const regle = REGLES_PRESENCE?.cas?.[cuId];
+  if (regle) return new Set(regle.conditionnels);
+
+  const conditionnels = new Set();
+  const cu = USE_CASES[cuId];
+  if (!cu) return conditionnels;
+  (cu.blocs_conditionnels || []).forEach(blocId => {
+    const bloc = BLOCS_CONDITIONNELS?.[blocId];
+    if (bloc) bloc.bts.forEach(item =>
+      conditionnels.add(typeof item === 'string' ? item : item.bt)
+    );
+  });
+  return conditionnels;
+}
+
+function statutBT(champ, obligatoire, conditionnel) {
+  const renseigne = champ?.present || false;
+  if (renseigne && (obligatoire || conditionnel)) return 'vert';
+  if (!renseigne && obligatoire)  return 'rouge';
+  if (!renseigne && conditionnel) return 'ambre';
+  if (renseigne)                  return 'bleu';
+  return 'gris';
+}
+
+function selectionnerUCChamps(cuId) {
+  etatApp.ucChampsSelectionne = cuId;
+  afficherOnglet('champs', etatApp.resultat);
+}
+
 function renderChamps(r) {
   const el = document.createElement('div');
   el.className = 'onglet-contenu';
 
-  const profil = r.profilDetecte || 'bas';
+  const cuActif = etatApp.ucChampsSelectionne || 'REF-NOMINAL';
+  const btObligatoires  = getBTsObligatoires(cuActif);
+  const btConditionnels = getBTsConditionnels(cuActif);
+  const cuActuel = USE_CASES[cuActif];
 
-  // Filtres
-  el.innerHTML = `
-    <div class="barre-filtres">
-      <input type="search" id="filtre-champs" placeholder="Filtrer par BT, nom ou valeur…" oninput="filtrerChamps(this.value)">
-      <select id="filtre-statut" onchange="filtrerChamps(document.getElementById('filtre-champs').value)">
-        <option value="">Tous les champs</option>
-        <option value="present">Présents uniquement</option>
-        <option value="manquant-m">Manquants obligatoires</option>
-        <option value="manquant-c">Manquants conditionnels</option>
-      </select>
-      <label class="label-filtre">Profil de référence :
-        <select id="filtre-profil" onchange="filtrerChamps(document.getElementById('filtre-champs').value)">
-          ${PROFILE_ORDER.map(p => `<option value="${p}" ${p === profil ? 'selected' : ''}>${PROFILES[p].label}</option>`).join('')}
-        </select>
-      </label>
-    </div>
-    <div id="conteneur-champs"></div>`;
+  // ── Sélecteur UC ──
+  const parCat = {};
+  Object.entries(USE_CASES).forEach(([id, cu]) => {
+    const cat = cu.categorie || 'Autres';
+    if (!parCat[cat]) parCat[cat] = [];
+    parCat[cat].push([id, cu]);
+  });
+  // Référence d'abord
+  const catOrder = Object.keys(parCat).sort((a, b) =>
+    a.startsWith('Référence') ? -1 : b.startsWith('Référence') ? 1 : a.localeCompare(b, 'fr')
+  );
 
-  setTimeout(() => {
-    el.querySelector('#conteneur-champs').innerHTML = renduGroupesChamps(r, profil, '', 'tous');
-  }, 0);
+  const selectorHtml = `
+    <div class="champs-uc-header">
+      <div class="champs-uc-top-row">
+        <div class="champs-uc-selector-wrap">
+          <span class="champs-uc-label">Cas d'usage :</span>
+          <select id="champs-uc-select" onchange="selectionnerUCChamps(this.value)">
+            ${catOrder.map(cat => `
+              <optgroup label="${escHtml(cat)}">
+                ${parCat[cat].map(([id, cu]) => `
+                  <option value="${escHtml(id)}" ${id === cuActif ? 'selected' : ''}>${escHtml(cu.id)} – ${escHtml(cu.titre)}</option>
+                `).join('')}
+              </optgroup>`).join('')}
+          </select>
+        </div>
+        ${cuActuel ? `<span class="badge-profil profil-${cuActuel.profil_recommande}">${PROFILES[cuActuel.profil_recommande]?.label || cuActuel.profil_recommande}</span>` : ''}
+      </div>
+      <div class="champs-legende">
+        <span class="legende-chip vert">✓ Renseigné &amp; attendu</span>
+        <span class="legende-chip rouge">✕ Absent obligatoire</span>
+        <span class="legende-chip ambre">⚠ Absent conditionnel</span>
+        <span class="legende-chip bleu">● Renseigné (hors UC)</span>
+        <span class="legende-chip gris">○ Non attendu / vide</span>
+      </div>
+    </div>`;
 
-  return el;
-}
-
-function filtrerChamps(texte) {
-  const statut = document.getElementById('filtre-statut')?.value || '';
-  const profil = document.getElementById('filtre-profil')?.value || etatApp.resultat?.profilDetecte || 'bas';
-  const conteneur = document.getElementById('conteneur-champs');
-  if (conteneur) {
-    conteneur.innerHTML = renduGroupesChamps(etatApp.resultat, profil, texte, statut);
-  }
-}
-
-function renduGroupesChamps(r, profil, filtreTxt, filtreStatut) {
-  // Regrouper les champs par BG
+  // ── Groupement BT par BG, triés alphabétiquement par label ──
   const groupes = {};
   for (const [btId, field] of Object.entries(FIELDS)) {
-    const g = field.group || 'ROOT';
-    if (!groupes[g]) groupes[g] = [];
-    groupes[g].push({ btId, field });
+    const bgId = field.group || 'ROOT';
+    if (!groupes[bgId]) groupes[bgId] = [];
+    groupes[bgId].push({ btId, field });
   }
+  Object.values(groupes).forEach(liste =>
+    liste.sort((a, b) => {
+      const numA = parseInt(a.btId.replace('BT-', ''), 10);
+      const numB = parseInt(b.btId.replace('BT-', ''), 10);
+      return numA - numB;
+    })
+  );
 
-  let html = '';
-  for (const [bgId, champs] of Object.entries(groupes)) {
+  // BGs triés par numéro
+  const bgOrder = Object.keys(BUSINESS_GROUPS).concat(
+    Object.keys(groupes).filter(k => !(k in BUSINESS_GROUPS))
+  );
+
+  const bgHtml = bgOrder.map(bgId => {
+    const champs = groupes[bgId];
+    if (!champs?.length) return '';
     const bg = BUSINESS_GROUPS[bgId] || { label: bgId, icon: '📋' };
 
-    const lignesHtml = champs.map(({ btId, field }) => {
+    const items = champs.map(({ btId, field }) => {
       const champ = r.champs[btId];
+      const oblig = btObligatoires.has(btId);
+      const cond  = btConditionnels.has(btId);
+      const statut = statutBT(champ, oblig, cond);
+      return { btId, field, champ, statut };
+    });
+
+    const tousGris  = items.every(i => i.statut === 'gris');
+    const nbVerts   = items.filter(i => i.statut === 'vert').length;
+    const nbRouges  = items.filter(i => i.statut === 'rouge').length;
+    const nbAmbres  = items.filter(i => i.statut === 'ambre').length;
+    const nbBleus   = items.filter(i => i.statut === 'bleu').length;
+
+    const bgTooltip = `${bg.label} – ${items.length} champs | ${nbVerts} renseignés | ${nbRouges} obligatoires manquants | ${nbAmbres} conditionnels absents${nbBleus > 0 ? ` | ${nbBleus} hors UC` : ''}`;
+
+    const cardsHtml = items.map(({ btId, field, champ, statut }) => {
+      const label = field.label.replace(' ★','');
       const valeur = champ?.valeur;
-      const present = champ?.present;
-      const niveauProfil = field.profiles[profil];
+      const ico = statut === 'vert' ? '✓' : statut === 'rouge' ? '✕' : statut === 'ambre' ? '⚠' : statut === 'bleu' ? '●' : '○';
+      return `<div class="bt-card statut-${statut}" data-bt-id="${escHtml(btId)}">
+        <div class="bt-card-header">
+          <code class="bt-card-code">${escHtml(btId)}</code>
+          <span class="bt-card-ico">${ico}</span>
+        </div>
+        <div class="bt-card-label">${escHtml(label)}</div>
+        ${valeur ? `<div class="bt-card-val">${escHtml(afficherValeurBT(btId, champ, r).substring(0, 45))}</div>` : ''}
+      </div>`;
+    }).join('');
 
-      // Filtres
-      if (filtreTxt) {
-        const t = filtreTxt.toLowerCase();
-        const match = btId.toLowerCase().includes(t) ||
-          field.label.toLowerCase().includes(t) ||
-          (valeur || '').toLowerCase().includes(t) ||
-          (field.description || '').toLowerCase().includes(t);
-        if (!match) return '';
-      }
-      if (filtreStatut === 'present' && !present) return '';
-      if (filtreStatut === 'manquant-m' && (present || niveauProfil !== 'M')) return '';
-      if (filtreStatut === 'manquant-c' && (present || niveauProfil !== 'C')) return '';
-
-      const classeStatut = present ? 'present'
-        : niveauProfil === 'M' ? 'manquant-obligatoire'
-        : niveauProfil === 'C' ? 'manquant-conditionnel'
-        : niveauProfil === 'N' ? 'non-applicable'
-        : 'absent-optionnel';
-
-      const iconeStatut = present ? '✓'
-        : niveauProfil === 'M' ? '✕'
-        : niveauProfil === 'C' ? '⚠'
-        : niveauProfil === 'N' ? '–'
-        : '○';
-
-      const labelNiveau = { M: 'Obligatoire', C: 'Conditionnel', O: 'Optionnel', N: 'Non applicable' };
-
-      return `<tr class="ligne-champ ${classeStatut}" title="${escHtml(field.description || '')}">
-        <td class="col-bt"><code class="bt-code">${escHtml(btId)}</code></td>
-        <td class="col-statut">
-          <span class="icone-statut">${iconeStatut}</span>
-          <span class="niveau-profil niveau-${niveauProfil?.toLowerCase() || 'n'}">${labelNiveau[niveauProfil] || niveauProfil || '–'}</span>
-        </td>
-        <td class="col-label">${escHtml(field.label.replace(' ★', ''))}
-          ${field.condition ? `<br><small class="condition-txt">↳ ${escHtml(field.condition)}</small>` : ''}
-          ${field.codeList ? `<small class="code-list-badge">Liste : ${escHtml(field.codeList)}</small>` : ''}
-        </td>
-        <td class="col-valeur">
-          ${present
-            ? `<span class="valeur-champ">${escHtml(afficherValeurBT(btId, champ, r))}</span>`
-            : `<span class="valeur-absente">${niveauProfil === 'N' ? 'Non utilisé dans ce profil' : 'Non renseigné'}</span>`}
-        </td>
-      </tr>`;
-    }).filter(Boolean).join('');
-
-    if (!lignesHtml) continue;
-
-    html += `
-      <details class="groupe-bg" open>
-        <summary class="groupe-bg-titre">
+    return `
+      <details class="bg-groupe" ${tousGris ? '' : 'open'} title="${escHtml(bgTooltip)}">
+        <summary class="bg-groupe-titre">
+          <span class="bg-expand-ico">▶</span>
           <span class="bg-icone">${bg.icon}</span>
-          <span class="bg-id">${escHtml(bgId)}</span>
-          <span class="bg-label">${escHtml(bg.label)}</span>
+          <span class="bg-code">${escHtml(bgId)}</span>
+          <span class="bg-label-txt">${escHtml(bg.label)}</span>
+          <div class="bg-compteurs">
+            ${nbVerts  > 0 ? `<span class="compteur vert">${nbVerts}✓</span>` : ''}
+            ${nbRouges > 0 ? `<span class="compteur rouge">${nbRouges}✕</span>` : ''}
+            ${nbAmbres > 0 ? `<span class="compteur ambre">${nbAmbres}⚠</span>` : ''}
+            ${nbBleus  > 0 ? `<span class="compteur bleu">${nbBleus}●</span>` : ''}
+            ${tousGris     ? `<span class="compteur gris">hors UC</span>` : ''}
+          </div>
         </summary>
-        <table class="tableau-champs">
-          <thead><tr><th>BT</th><th>Statut</th><th>Champ</th><th>Valeur</th></tr></thead>
-          <tbody>${lignesHtml}</tbody>
-        </table>
+        <div class="bt-grille">${cardsHtml}</div>
       </details>`;
-  }
+  }).join('');
 
-  return html || '<p class="vide">Aucun champ correspondant au filtre.</p>';
+  el.innerHTML = selectorHtml + bgHtml;
+  return el;
 }
 
 function afficherValeurBT(btId, champ, r) {
@@ -865,6 +1112,90 @@ function renduDetailCasUsage(cu, r) {
         </div>
       </div>
 
+      ${cu.champs_distinctifs?.length > 0 ? `
+      <div class="cu-section">
+        <h3>BTs spécifiques à ce cas d'usage</h3>
+        <p class="sous-titre">Champs requis en plus d'une facture B2B standard :</p>
+        <div class="grille-champs-requis">
+          ${cu.champs_distinctifs.map(item => {
+            const btId = typeof item === 'string' ? item : item.bt;
+            const note = typeof item === 'object' ? (item.note || '') : '';
+            const field = FIELDS[btId];
+            const champ = r?.champs[btId];
+            const present = r ? champ?.present : null;
+            const classeEtat = present === null ? 'distinctif' : (present ? 'present' : 'absent');
+            const icone = present === null ? '📌' : (present ? '✓' : '✕');
+            return `<div class="champ-requis-item ${classeEtat}">
+              <span class="champ-requis-ico">${icone}</span>
+              <div class="champ-requis-corps">
+                <span><code>${escHtml(btId)}</code> ${escHtml(field?.label?.replace(' ★','') || btId)}</span>
+                ${note ? `<em class="champ-note-distinctif">↳ ${escHtml(note)}</em>` : ''}
+                ${r && present && champ?.valeur ? `<em class="champ-val-actuelle">${escHtml(champ.valeur.substring(0, 50))}</em>` : ''}
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>` : ''}
+
+      ${cu.blocs_conditionnels?.length > 0 ? `
+      <div class="cu-section">
+        <h3>Données conditionnelles</h3>
+        <p class="sous-titre">Champs qui s'activent selon votre contexte métier :</p>
+        <table class="tableau-conditionnel">
+          <thead><tr><th>Condition</th><th>Champs BT</th></tr></thead>
+          <tbody>
+            ${cu.blocs_conditionnels.map(blocId => {
+              const bloc = BLOCS_CONDITIONNELS[blocId];
+              if (!bloc) return '';
+              return `<tr>
+                <td>
+                  <div class="bloc-condition-titre">${bloc.icone} ${escHtml(bloc.titre)}</div>
+                  <div class="bloc-condition-texte">${escHtml(bloc.condition)}</div>
+                </td>
+                <td>
+                  <div class="bt-chips-groupe">
+                    ${bloc.bts.map(item => {
+                      const btId = typeof item === 'string' ? item : item.bt;
+                      const note = typeof item === 'object' ? item.note : '';
+                      const champ = r?.champs[btId];
+                      const present = r ? champ?.present : null;
+                      const cl = present === null ? 'neutre' : (present ? 'present' : 'absent');
+                      const ico = present === null ? '' : (present ? '✓ ' : '○ ');
+                      return `<span class="bt-chip ${cl}" title="${escHtml(note)}">${ico}<code>${escHtml(btId)}</code></span>`;
+                    }).join('')}
+                  </div>
+                </td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>` : ''}
+
+      ${cu.champs_recommandes?.length > 0 ? `
+      <div class="cu-section">
+        <h3>Champs recommandés (non obligatoires)</h3>
+        <p class="sous-titre">Optionnels dans la norme, mais utiles en pratique pour ce cas :</p>
+        <div class="grille-recommandes">
+          ${cu.champs_recommandes.map(item => {
+            const btId = typeof item === 'string' ? item : item.bt;
+            const raison = typeof item === 'object' ? (item.raison || '') : '';
+            const field = FIELDS[btId];
+            const champ = r?.champs[btId];
+            const present = r ? champ?.present : null;
+            const cl = present === null ? '' : (present ? 'present' : 'absent');
+            return `<div class="champ-recommande ${cl}">
+              <div class="recommande-header">
+                <code class="recommande-bt">${escHtml(btId)}</code>
+                ${present !== null ? `<span class="recommande-ico">${present ? '✓' : '○'}</span>` : ''}
+              </div>
+              <div class="recommande-label">${escHtml(field?.label?.replace(' ★','') || btId)}</div>
+              ${raison ? `<div class="recommande-raison">${escHtml(raison)}</div>` : ''}
+              ${r && present && champ?.valeur ? `<div class="recommande-val">${escHtml(champ.valeur.substring(0,40))}</div>` : ''}
+            </div>`;
+          }).join('')}
+        </div>
+      </div>` : ''}
+
       ${cu.conditions ? `
       <div class="cu-section">
         <h3>Conditions d'application</h3>
@@ -1050,18 +1381,89 @@ function renduDetailCasUsage(cu, r) {
 function selectionnerRole(rid) {
   etatApp.roleSelectionne = etatApp.roleSelectionne === rid ? null : rid;
   const cu = USE_CASES[etatApp.casUsageSelectionne];
-  const detail = document.getElementById('detail-cas-usage');
+  const detail = document.getElementById('detail-cas-usage') || document.getElementById('cu-detail-accueil');
   if (detail && cu) detail.innerHTML = renduDetailCasUsage(cu, etatApp.resultat);
 }
 
 function selectionnerEtat(eid) {
   etatApp.etatWorkflowSelectionne = etatApp.etatWorkflowSelectionne === eid ? null : eid;
   const cu = USE_CASES[etatApp.casUsageSelectionne];
-  const detail = document.getElementById('detail-cas-usage');
+  const detail = document.getElementById('detail-cas-usage') || document.getElementById('cu-detail-accueil');
   if (detail && cu) detail.innerHTML = renduDetailCasUsage(cu, etatApp.resultat);
 }
 
-// ─── Onglet XML ───────────────────────────────────────────────────────────────
+// ─── Onglet XML – annotation BT ──────────────────────────────────────────────
+
+function construireBTsPourXml() {
+  const list = [];
+  for (const [btId, field] of Object.entries(FIELDS)) {
+    if (!field.xpath) continue;
+    const segs = field.xpath
+      .replace(/\[[^\]]*\]/g, '') // strip [conditions]
+      .split('/')
+      .filter(Boolean);
+    list.push({ btId, segs, label: (field.label || '').replace(' ★',''), desc: field.description || '' });
+  }
+  list.sort((a, b) => b.segs.length - a.segs.length); // longest = most specific first
+  return list;
+}
+
+function annoterLignesXml(xmlFormate) {
+  const btsList = construireBTsPourXml();
+  const lignes = xmlFormate.split('\n');
+  const annotations = new Array(lignes.length).fill(null);
+  const stack = [];
+
+  function matchBT() {
+    for (const { btId, segs } of btsList) {
+      if (stack.length < segs.length) continue;
+      const tail = stack.slice(-segs.length);
+      if (tail.every((t, j) => t === segs[j])) return btId;
+    }
+    return null;
+  }
+
+  for (let i = 0; i < lignes.length; i++) {
+    const raw = lignes[i].trimStart();
+    if (!raw || raw.startsWith('<?') || raw.startsWith('<!--')) continue;
+
+    const openM  = raw.match(/^<([a-zA-Z][a-zA-Z0-9:_.-]*)(?:\s[^>]*)?>/);
+    const closeM = raw.match(/^<\/([a-zA-Z][a-zA-Z0-9:_.-]*)\s*>/);
+    const selfM  = raw.match(/^<([a-zA-Z][a-zA-Z0-9:_.-]*)(?:\s[^>]*)?\s*\/>/);
+    const isInline = openM && raw.includes('</') && !raw.trimStart().startsWith('</');
+
+    if (selfM) {
+      stack.push(selfM[1]);
+      annotations[i] = matchBT();
+      stack.pop();
+    } else if (isInline && openM) {
+      stack.push(openM[1]);
+      annotations[i] = matchBT();
+      stack.pop();
+    } else if (closeM) {
+      if (stack.length > 0 && stack[stack.length - 1] === closeM[1]) stack.pop();
+    } else if (openM) {
+      stack.push(openM[1]);
+    }
+  }
+  return annotations;
+}
+
+function syntaxColorXml(ligne) {
+  let s = ligne
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '\x01')
+    .replace(/>/g, '\x02')
+    .replace(/"/g, '&quot;');
+  // Colorize tag names (after \x01 or \x01/)
+  s = s.replace(/\x01(\/?)([\w:.-]+)/g,
+    (_, sl, tag) => `\x01${sl}<span class="xc-tag">${tag}</span>`);
+  // Colorize attribute name="value"
+  s = s.replace(/ ([\w:.-]+)=(&quot;[^&]*&quot;)/g,
+    ' <span class="xc-aname">$1</span>=<span class="xc-aval">$2</span>');
+  return s.replace(/\x01/g, '&lt;').replace(/\x02/g, '&gt;');
+}
+
 function renderXml(r) {
   const el = document.createElement('div');
   el.className = 'onglet-contenu';
@@ -1072,19 +1474,32 @@ function renderXml(r) {
   }
 
   const xmlFormate = prettifyXml(r.xmlTexte);
+  const annotations = annoterLignesXml(xmlFormate);
+  const lignes = xmlFormate.split('\n');
+
+  const rowsHtml = lignes.map((ligne, i) => {
+    const btId = annotations[i];
+    const field = btId ? FIELDS[btId] : null;
+    const tooltip = btId
+      ? `${btId}\n${field?.label?.replace(' ★','') || ''}\n${field?.description || ''}`.trim()
+      : '';
+    const btCell = btId
+      ? `<span class="xbt-badge" data-bt-id="${escHtml(btId)}">${escHtml(btId)}</span>`
+      : '';
+    return `<div class="xml-row"><div class="xml-bt-col">${btCell}</div><div class="xml-code-col">${syntaxColorXml(ligne)}</div></div>`;
+  }).join('');
+
   el.innerHTML = `
     <div class="xml-header">
       <div class="xml-info">
         <span>Fichier : <code>${escHtml(r.nomFichierXml || 'inconnu')}</code></span>
         <span>Source : <code>${escHtml(r.sourceXml || 'inconnu')}</code></span>
         <span>Format : <code>${escHtml(r.format || 'CII')}</code></span>
-        <span>Taille : <code>${r.xmlTexte.length.toLocaleString('fr-FR')} caractères</code></span>
+        <span>Taille : <code>${r.xmlTexte.length.toLocaleString('fr-FR')} car.</code></span>
       </div>
       <button class="btn-copier" onclick="copierXml()">📋 Copier le XML</button>
     </div>
-    <div class="xml-conteneur">
-      <pre id="xml-pre" class="xml-code"><code>${escHtml(xmlFormate)}</code></pre>
-    </div>`;
+    <div class="xml-annote">${rowsHtml}</div>`;
   return el;
 }
 
@@ -1119,7 +1534,6 @@ function initCasUsage() {
   const conteneur = document.getElementById('cas-usage-accueil');
   if (!conteneur) return;
 
-  // Grouper par catégorie
   const parCategorie = {};
   Object.entries(USE_CASES).forEach(([id, cu]) => {
     const cat = cu.categorie || 'Autres';
@@ -1127,35 +1541,52 @@ function initCasUsage() {
     parCategorie[cat].push([id, cu]);
   });
 
+  const premierId = Object.keys(USE_CASES)[0];
+  etatApp.casUsageSelectionne = premierId;
+  etatApp.roleSelectionne = null;
+  etatApp.etatWorkflowSelectionne = null;
+
   conteneur.innerHTML = `
-    ${Object.entries(parCategorie).map(([cat, items]) => `
-      <div class="cu-accueil-categorie">
-        <h3 class="cu-accueil-categorie-titre">${escHtml(cat)}</h3>
-        <div class="grille-cu-accueil">
-          ${items.map(([id, cu]) => `
-            <div class="cu-card-accueil" onclick="afficherDetailCuAccueil('${id}')">
-              <div class="cu-card-header">
-                <span class="cu-card-id">${escHtml(cu.id)}</span>
-                <span class="badge-profil profil-${cu.profil_recommande}">${PROFILES[cu.profil_recommande]?.label || cu.profil_recommande}</span>
-              </div>
-              <h4>${escHtml(cu.titre)}</h4>
-              <p>${escHtml(cu.description)}</p>
-            </div>`).join('')}
-        </div>
-      </div>`).join('')}
-    <div id="cu-detail-accueil" class="cache"></div>`;
+    <div class="cas-usage-layout">
+      <aside class="liste-cas-usage">
+        <h3>Cas d'usage AFNOR XP Z12-014</h3>
+        <p class="sous-titre-cu">Sélectionnez un cas d'usage pour explorer le flux, les obligations et les étapes</p>
+        <ul class="cu-liste">
+          ${Object.entries(parCategorie).map(([cat, items]) => `
+            <li class="cu-categorie-groupe">
+              <div class="cu-categorie-label">${escHtml(cat)}</div>
+              <ul class="cu-sous-liste">
+                ${items.map(([id, cu]) => `
+                  <li class="cu-item ${id === premierId ? 'actif' : ''}"
+                      data-cu-id="${escHtml(id)}"
+                      onclick="selectionnerCasUsageAccueil('${id}')">
+                    <div class="cu-item-titre">
+                      <span class="cu-item-id">${escHtml(cu.id)}</span>
+                      <span>${escHtml(cu.titre)}</span>
+                    </div>
+                    <div class="cu-item-profil">
+                      <span class="badge-profil profil-${cu.profil_recommande}">${PROFILES[cu.profil_recommande]?.label || cu.profil_recommande}</span>
+                    </div>
+                  </li>`).join('')}
+              </ul>
+            </li>`).join('')}
+        </ul>
+      </aside>
+      <main class="detail-cas-usage" id="cu-detail-accueil">
+        ${premierId ? renduDetailCasUsage(USE_CASES[premierId], null) : '<p class="vide">Sélectionnez un cas d\'usage</p>'}
+      </main>
+    </div>`;
 }
 
-function afficherDetailCuAccueil(id) {
-  const cu = USE_CASES[id];
-  const div = document.getElementById('cu-detail-accueil');
-  if (!div || !cu) return;
+function selectionnerCasUsageAccueil(id) {
   etatApp.casUsageSelectionne = id;
   etatApp.roleSelectionne = null;
   etatApp.etatWorkflowSelectionne = null;
-  div.classList.remove('cache');
-  div.innerHTML = renduDetailCasUsage(cu, null);
-  div.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  document.querySelectorAll('#cas-usage-accueil .cu-item').forEach(el => {
+    el.classList.toggle('actif', el.dataset.cuId === id);
+  });
+  const detail = document.getElementById('cu-detail-accueil');
+  if (detail) detail.innerHTML = renduDetailCasUsage(USE_CASES[id], null);
 }
 
 // ─── Exemple de démonstration ────────────────────────────────────────────────

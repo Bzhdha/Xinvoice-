@@ -537,11 +537,6 @@ const WORKFLOW_TIERS_PAYEUR = {
     },
   ],
 };
-      action: 'Archivage avec accord tripartite',
-      checklist: ['Archiver la facture','Archiver l\'accord avec le tiers payeur','Conservation 10 ans'],
-    },
-  ],
-};
 
 /**
  * WORKFLOW_PARTIEL_TIERS (Figure 10 – Prise en charge partielle acheteur + tiers connu)
@@ -1947,17 +1942,17 @@ Object.assign(USE_CASES, {
     contexte: 'Abonnements, contrats de maintenance, loyers, SaaS, services récurrents.',
     conditions: [
       'La facture couvre une période définie (mois, trimestre)',
-      'BT-7/BT-8 : période de facturation à renseigner',
+      'BT-73/BT-74 : période de facturation à renseigner',
       'Le montant est identique à chaque période (ou indexé selon clause contractuelle)',
     ],
-    champs_requis_cle: ['BT-1','BT-2','BT-5','BT-7','BT-8','BT-27','BT-44','BT-112','BT-115'],
-    mentions_obligatoires:['Période couverte (BT-7 début – BT-8 fin)', 'Référence au contrat ou abonnement (BT-12)', 'Montant mensuel ou périodique'],
+    champs_requis_cle: ['BT-1','BT-2','BT-5','BT-73','BT-74','BT-27','BT-44','BT-112','BT-115'],
+    mentions_obligatoires:['Période couverte (BT-73 début – BT-74 fin)', 'Référence au contrat ou abonnement (BT-12)', 'Montant mensuel ou périodique'],
     workflow: _workflowStandard('acheteur'),
     signaux_detection: {
       description: 'Cas probable si :',
       indices: [
-        { champ:'BT-7', presence:true, message:'Date de début de période de facturation présente' },
-        { champ:'BT-8', presence:true, message:'Date de fin de période de facturation présente' },
+        { champ:'BT-73', presence:true, message:'Date de début de période de facturation présente' },
+        { champ:'BT-74', presence:true, message:'Date de fin de période de facturation présente' },
         { champ:'BT-12', presence:true, message:'Référence contrat/abonnement présente' },
       ],
     },
@@ -2323,6 +2318,570 @@ Object.assign(USE_CASES, {
       ],
     },
   },
+});
+
+// ─── BTs distinctifs par cas d'usage (vs facture B2B standard) ──────────────
+// Champs NON présents dans une facture B2B ordinaire (BT-1,2,3,5,24,27,30,31,40,44,47,109,110,112,115,116,117,118)
+const CHAMPS_DISTINCTIFS = {
+  'XP-1': [
+    { bt:'BT-13', note:'Référence bon de commande – une par commande groupée (peut être multiple)' },
+    { bt:'BT-16', note:'Référence bon de livraison / avis d\'expédition par lot' },
+    { bt:'BT-15', note:'Référence avis de réception (si applicable)' },
+    { bt:'BT-72', note:'Date de livraison effective par ligne ou groupe' },
+    { bt:'BT-73', note:'Début de la période de facturation groupée (BG-14)' },
+    { bt:'BT-74', note:'Fin de la période de facturation groupée (BG-14)' },
+  ],
+  'XP-2': [
+    { bt:'BT-81', note:'Moyen de paiement utilisé (paiement déjà encaissé)' },
+    { bt:'BT-20', note:'Conditions de paiement : mention "Acquitté" ou "Payé" obligatoire' },
+    { bt:'BT-113', note:'Montant déjà payé = montant TTC (solde = 0)' },
+    { bt:'BT-115', note:'= 0 : aucun solde restant dû (déjà réglé)' },
+  ],
+  'XP-3': [
+    { bt:'BT-59', note:'Nom du tiers payeur (bénéficiaire – différent du vendeur)' },
+    { bt:'BT-60', note:'Identifiant du tiers payeur' },
+    { bt:'BT-61', note:'Identifiant légal du tiers (SIREN/SIRET)' },
+    { bt:'BT-84', note:'IBAN du tiers payeur – l\'acheteur paie ce tiers, pas le vendeur' },
+  ],
+  'XP-4': [
+    { bt:'BT-59', note:'Nom du tiers prenant en charge une partie (OPCO, mutuelle…)' },
+    { bt:'BT-60', note:'Identifiant du tiers (prise en charge partielle)' },
+    { bt:'BT-92', note:'Montant de la quote-part tiers (BG-20 remise) ou BT-99 (BG-21 frais)' },
+    { bt:'BT-22', note:'Note indiquant la répartition acheteur / tiers' },
+  ],
+  'XP-5': [
+    { bt:'BT-122', note:'Référence justificatif joint (frais avancés par le collaborateur)' },
+    { bt:'BT-123', note:'Description du document justificatif' },
+  ],
+  'XP-6': [],
+  'XP-7': [
+    { bt:'BT-81', note:'= 48 : carte bancaire (carte d\'achat / carte logée)' },
+    { bt:'BT-87', note:'4 derniers chiffres de la carte (traçabilité transaction)' },
+    { bt:'BT-88', note:'Titulaire de la carte (nom du détenteur)' },
+  ],
+  'XP-8': [
+    { bt:'BT-59', note:'Nom du factor (cessionnaire de la créance)' },
+    { bt:'BT-60', note:'Identifiant du factor' },
+    { bt:'BT-84', note:'IBAN du factor – l\'acheteur règle le factor, pas le vendeur' },
+    { bt:'BT-22', note:'Mention obligatoire "Créance cédée à [factor]" – notification de cession' },
+  ],
+  'XP-9': [
+    { bt:'BT-59', note:'Nom du distributeur/dépositaire (tiers bénéficiaire)' },
+    { bt:'BT-60', note:'Identifiant du distributeur' },
+    { bt:'BT-13', note:'Référence commande émise par le distributeur' },
+    { bt:'BT-84', note:'IBAN du distributeur pour paiement' },
+  ],
+  'XP-10': [
+    { bt:'BT-84', note:'IBAN potentiellement redirigé (subrogation / cession confidentielle)' },
+    { bt:'BT-22', note:'Accord de subrogation ou cession si notification requise' },
+  ],
+  'XP-11': [
+    { bt:'BT-49', note:'Adresse électronique acheteur (routage vers le tiers traitant mandaté)' },
+  ],
+  'XP-12': [],
+  'XP-13': [
+    { bt:'BT-12', note:'Référence du marché principal (obligatoire en sous-traitance)' },
+    { bt:'BT-118', note:'AE = Autoliquidation (sous-traitance BTP, CGI art. 283-2)' },
+    { bt:'BT-120', note:'Motif d\'exonération : "Autoliquidation TVA – sous-traitance BTP"' },
+    { bt:'BT-121', note:'Code motif exo : VATEX-EU-AE' },
+    { bt:'BT-59', note:'Maître d\'ouvrage (si paiement direct au sous-traitant)' },
+    { bt:'BT-84', note:'IBAN du sous-traitant (si paiement direct)' },
+  ],
+  'XP-14': [
+    { bt:'BT-12', note:'Référence du marché commun (GME, consortium)' },
+    { bt:'BT-22', note:'Mention mandataire du groupement et quote-part co-traitant' },
+  ],
+  'XP-15': [
+    { bt:'BT-59', note:'Nom du tiers commandeur (centrale d\'achat, holding)' },
+    { bt:'BT-60', note:'Identifiant du tiers commandeur' },
+    { bt:'BT-13', note:'Référence commande émise par le tiers (pas par l\'acheteur final)' },
+    { bt:'BT-84', note:'IBAN du tiers qui effectue le paiement' },
+  ],
+  'XP-16': [
+    { bt:'BT-118', note:'E ou O sur la partie débours (hors TVA, CGI art. 267 II)' },
+    { bt:'BT-120', note:'Motif d\'exonération TVA débours (art. 267 II du CGI)' },
+    { bt:'BT-121', note:'Code motif exo sur la partie débours' },
+    { bt:'BT-122', note:'Références des justificatifs au nom du client (obligatoires)' },
+  ],
+  'XP-17a': [
+    { bt:'BT-59', note:'Nom de la Marketplace (intermédiaire de paiement)' },
+    { bt:'BT-60', note:'Identifiant de la Marketplace' },
+    { bt:'BT-84', note:'IBAN de la Marketplace – l\'acheteur paie la plateforme' },
+    { bt:'BT-13', note:'Référence commande Marketplace' },
+  ],
+  'XP-17b': [
+    { bt:'BT-59', note:'Marketplace mandataire de facturation (émet au nom du vendeur)' },
+    { bt:'BT-84', note:'IBAN pour paiement via Marketplace' },
+    { bt:'BT-22', note:'Mention mandat de facturation : "émis par [Marketplace] au nom de [Vendeur]"' },
+  ],
+  'XP-18': [
+    { bt:'BT-3', note:'= 383 (TypeCode note de débit) – rôles vendeur/acheteur inversés' },
+    { bt:'BT-25', note:'Référence à la facture ou contrat objet du débit' },
+    { bt:'BT-26', note:'Date de la facture initiale référencée' },
+  ],
+  'XP-19a': [
+    { bt:'BT-30', note:'SIREN/SIRET du vendeur réel (pas du tiers facturant mandataire)' },
+    { bt:'BT-31', note:'TVA intracommunautaire du vendeur réel' },
+    { bt:'BT-22', note:'Mention mandat de facturation + identité du tiers mandataire obligatoire' },
+  ],
+  'XP-19b': [
+    { bt:'BT-17', note:'Référence accord / indicateur auto-facturation (self-billing)' },
+    { bt:'BT-22', note:'Mention "Autofacturation" obligatoire (accord acheteur–vendeur)' },
+    { bt:'BT-23', note:'Type de processus : peut identifier le processus d\'auto-facturation' },
+  ],
+  'XP-20': [
+    { bt:'BT-3', note:'= 386 (TypeCode facture d\'acompte) ou 380 avec mention explicite' },
+    { bt:'BT-12', note:'Référence au contrat global dont l\'acompte fait partie' },
+    { bt:'BT-22', note:'Mention "Acompte n°X sur contrat N°Y" + % ou montant global' },
+  ],
+  'XP-21': [
+    { bt:'BT-25', note:'Référence aux factures d\'acompte antérieures (une par acompte)' },
+    { bt:'BT-113', note:'Montant total des acomptes déjà versés (déduit du TTC)' },
+    { bt:'BT-92', note:'Remises BG-20 = déduction des acomptes (montant + motif)' },
+    { bt:'BT-22', note:'Mention "Facture définitive – déduction acomptes n°X, Y, Z"' },
+  ],
+  'XP-22a': [
+    { bt:'BT-20', note:'Conditions de paiement : taux escompte, date limite, montant net si utilisé' },
+    { bt:'BT-92', note:'Montant de l\'escompte (remise conditionnelle sur document BG-20)' },
+    { bt:'BT-94', note:'Taux de l\'escompte (%)' },
+    { bt:'BT-95', note:'Code TVA recalculée sur la base nette après escompte (services)' },
+    { bt:'BT-96', note:'Taux TVA sur la base nette (si escompte utilisé – TVA à l\'encaissement)' },
+  ],
+  'XP-22b': [
+    { bt:'BT-20', note:'Mention escompte conditionnel (taux, date limite de paiement)' },
+    { bt:'BT-22', note:'Précision : TVA calculée sur le brut avant escompte (biens, TVA aux débits)' },
+  ],
+  'XP-23': [
+    { bt:'BT-17', note:'Indicateur self-billing (acheteur émet au nom du vendeur particulier)' },
+    { bt:'BT-22', note:'Mention "Autofacturation" + accord du vendeur particulier référencé' },
+    { bt:'BT-118', note:'E ou O si le vendeur particulier n\'est pas assujetti à la TVA' },
+  ],
+  'XP-24': [
+    { bt:'BT-22', note:'Mention EXPLICITE "Arrhes" (pas "acompte") + conditions d\'annulation' },
+    { bt:'BT-3', note:'= 386 ou 380 selon convention – mais qualifier expressément "arrhes"' },
+  ],
+  'XP-25': [
+    { bt:'BT-113', note:'Valeur du bon/carte cadeau utilisée (prépaiement déduit du TTC)' },
+    { bt:'BT-22', note:'Référence et valeur du bon cadeau utilisé en déduction' },
+  ],
+  'XP-26': [
+    { bt:'BT-22', note:'Clause de réserve de propriété (doit figurer sur la facture pour être opposable)' },
+  ],
+  'XP-27': [
+    { bt:'BT-73', note:'Début de la période de péage (relevé mensuel)' },
+    { bt:'BT-74', note:'Fin de la période couverte par le relevé de péage' },
+    { bt:'BT-119', note:'= 20 : taux TVA 20% applicable aux péages autoroutiers' },
+    { bt:'BT-22', note:'Nombre de passages et/ou plaque d\'immatriculation si relevé global' },
+  ],
+  'XP-28': [
+    { bt:'BT-119', note:'= 10 : taux intermédiaire TVA restauration (bons de restaurant)' },
+    { bt:'BT-22', note:'Nombre de convives et nature du repas (professionnel)' },
+  ],
+  'XP-29': [
+    { bt:'BT-31', note:'Numéro TVA de l\'assujetti unique de groupe (commun à toutes les entités membres)' },
+    { bt:'BT-48', note:'Numéro TVA de groupe de l\'entité acheteur membre' },
+    { bt:'BT-118', note:'O = Hors champ TVA pour les flux internes au groupe TVA' },
+  ],
+  'XP-30': [],
+  'XP-31': [
+    { bt:'BT-119', note:'Taux multiples dans la même facture (5,5% / 10% / 20% …)' },
+    { bt:'BT-120', note:'Motif d\'exonération pour chaque catégorie E ou O' },
+    { bt:'BT-121', note:'Code motif exo VATEX pour chaque catégorie exonérée' },
+  ],
+  'XP-32': [
+    { bt:'BT-73', note:'Début de la période facturée (abonnement, loyer, SaaS…)' },
+    { bt:'BT-74', note:'Fin de la période facturée' },
+    { bt:'BT-12', note:'Référence au contrat ou abonnement récurrent' },
+    { bt:'BT-7',  note:'Date fait générateur TVA (si services à TVA à l\'encaissement)' },
+  ],
+  'XP-33': [
+    { bt:'BT-22', note:'Mention OBLIGATOIRE "Régime particulier – biens d\'occasion" (art. 297A CGI)' },
+    { bt:'BT-110', note:'= 0 ou absent : la TVA NE DOIT PAS figurer séparément sous peine de taxation sur le prix total' },
+    { bt:'BT-116', note:'Base imposable = prix de vente TTC (marge incluse) pour le régime de la marge' },
+  ],
+  'XP-34': [
+    { bt:'BT-3',  note:'= 381 (avoir) pour annuler la partie de la créance non payée' },
+    { bt:'BT-25', note:'Référence à la facture initiale partiellement encaissée' },
+    { bt:'BT-26', note:'Date de la facture initiale référencée' },
+  ],
+  'XP-35': [
+    { bt:'BT-119', note:'= 10 : taux réduit TVA droits d\'auteur (art. 278-0 bis CGI)' },
+    { bt:'BT-22', note:'Nature des droits cédés/concédés, œuvre concernée, période' },
+    { bt:'BT-12', note:'Référence contrat de cession de droits ou accord de royalties' },
+  ],
+  'XP-36': [
+    { bt:'BT-22', note:'Description générique de la prestation (respectant le secret professionnel)' },
+    { bt:'BT-29', note:'Identifiant professionnel (n° Ordre, SIREN) pour identifier le prestataire' },
+  ],
+  'REF-LITIGE-AVOIR': [
+    { bt:'BT-3',  note:'= 381 (avoir F2) référençant la facture F1 en litige' },
+    { bt:'BT-25', note:'Numéro de la facture initiale F1 (obligatoire sur l\'avoir)' },
+    { bt:'BT-26', note:'Date de la facture initiale F1' },
+  ],
+  'REF-LITIGE-RECTIF': [
+    { bt:'BT-3',  note:'= 384 (facture rectificative F2) annulant et remplaçant F1' },
+    { bt:'BT-25', note:'Numéro de la facture initiale F1 (obligatoire sur la rectificative)' },
+    { bt:'BT-26', note:'Date de la facture initiale F1' },
+  ],
+  'REF-DEJA-PAYEE': [
+    { bt:'BT-81', note:'Moyen de paiement utilisé (déjà encaissé avant émission)' },
+    { bt:'BT-20', note:'= "Acquitté" – mention obligatoire sur facture déjà payée' },
+    { bt:'BT-113', note:'Montant total prépayé (= TTC, solde = 0)' },
+  ],
+  'REF-TIERS-PAYEUR': [
+    { bt:'BT-59', note:'Nom du tiers payeur identifié dans BG-10' },
+    { bt:'BT-60', note:'Identifiant du tiers payeur (OD/PDP)' },
+    { bt:'BT-84', note:'IBAN du vendeur (le tiers paie directement au vendeur)' },
+  ],
+  'REF-PARTIEL-TIERS': [
+    { bt:'BT-59', note:'Nom du tiers prenant en charge une quote-part (OPCO, mutuelle)' },
+    { bt:'BT-60', note:'Identifiant du tiers (prise en charge partielle)' },
+    { bt:'BT-22', note:'Quote-parts acheteur et tiers clairement ventilées dans la note' },
+  ],
+  'REF-FRAIS-COLLAB-B2C': [
+    { bt:'BT-44', note:'Nom du COLLABORATEUR individu (pas de l\'entreprise) comme acheteur' },
+    { bt:'BT-47', note:'Absent (individu non immatriculé) – déclencheur e-reporting B2C' },
+    { bt:'BT-48', note:'Absent (pas de TVA pour un individu) – flux 10.3/10.4 PPF requis' },
+  ],
+};
+
+// Enrichir les cas d'usage avec leurs champs distinctifs
+Object.entries(CHAMPS_DISTINCTIFS).forEach(([id, champs]) => {
+  if (USE_CASES[id]) USE_CASES[id].champs_distinctifs = champs;
+});
+
+// ─── Blocs de données conditionnelles ────────────────────────────────────────
+// Champs qui s'activent selon une condition métier spécifique
+const BLOCS_CONDITIONNELS = {
+  'livraison': {
+    icone: '🚚', titre: 'Adresse de livraison distincte',
+    condition: 'Si les biens/services sont livrés à une adresse différente de celle de l\'acheteur',
+    bts: [
+      { bt:'BT-70', note:'Nom du destinataire de livraison' },
+      { bt:'BT-71', note:'Identifiant du lieu de livraison (GLN)' },
+      { bt:'BT-72', note:'Date de livraison effective' },
+      { bt:'BT-75', note:'Adresse de livraison – Ligne 1 (BG-15)' },
+      { bt:'BT-78', note:'Ville de livraison' },
+      { bt:'BT-79', note:'Code postal de livraison' },
+      { bt:'BT-80', note:'Pays de livraison (ISO 3166)' },
+    ],
+  },
+  'periode': {
+    icone: '📅', titre: 'Période de prestation ou de facturation',
+    condition: 'Si la facture couvre une période définie (abonnement, loyer, maintenance, SaaS…)',
+    bts: [
+      { bt:'BT-73', note:'Début de la période de facturation (BG-14)' },
+      { bt:'BT-74', note:'Fin de la période de facturation (BG-14)' },
+    ],
+  },
+  'virement': {
+    icone: '🏧', titre: 'Paiement par virement bancaire (SEPA)',
+    condition: 'Si le règlement s\'effectue par virement (BT-81 = 30 ou 58)',
+    bts: [
+      { bt:'BT-84', note:'IBAN du compte bénéficiaire (obligatoire pour virement)' },
+      { bt:'BT-85', note:'Nom du titulaire du compte bénéficiaire' },
+      { bt:'BT-86', note:'BIC de la banque bénéficiaire' },
+      { bt:'BT-83', note:'Référence de paiement à rappeler dans le virement' },
+    ],
+  },
+  'carte': {
+    icone: '💳', titre: 'Paiement par carte bancaire',
+    condition: 'Si le règlement a été ou sera effectué par carte (BT-81 = 48)',
+    bts: [
+      { bt:'BT-87', note:'4 derniers chiffres de la carte (BG-18)' },
+      { bt:'BT-88', note:'Nom du titulaire de la carte' },
+    ],
+  },
+  'prelevement': {
+    icone: '📥', titre: 'Paiement par prélèvement SEPA',
+    condition: 'Si le vendeur prélève directement le compte de l\'acheteur (BT-81 = 49)',
+    bts: [
+      { bt:'BT-89', note:'Référence du mandat de prélèvement SEPA (BG-19)' },
+      { bt:'BT-90', note:'Identifiant créancier SEPA (ICS)' },
+      { bt:'BT-91', note:'IBAN du compte à débiter' },
+    ],
+  },
+  'beneficiaire': {
+    icone: '👤', titre: 'Bénéficiaire du paiement ≠ vendeur',
+    condition: 'Si le paiement doit être adressé à un tiers (factor, centrale de paiement, OD/PDP…)',
+    bts: [
+      { bt:'BT-59', note:'Nom du bénéficiaire (BG-10)' },
+      { bt:'BT-60', note:'Identifiant du bénéficiaire' },
+      { bt:'BT-61', note:'Identifiant légal du bénéficiaire (SIREN/SIRET)' },
+    ],
+  },
+  'representant_fiscal': {
+    icone: '🌍', titre: 'Représentant fiscal du vendeur',
+    condition: 'Si le vendeur est établi hors UE ou n\'est pas immatriculé localement à la TVA',
+    bts: [
+      { bt:'BT-62', note:'Nom du représentant fiscal du vendeur (BG-11)' },
+      { bt:'BT-63', note:'N° TVA du représentant fiscal dans le pays d\'imposition' },
+    ],
+  },
+  'remise_doc': {
+    icone: '🏷️', titre: 'Remise globale sur le document',
+    condition: 'Si une remise s\'applique à l\'ensemble de la facture (hors remises par ligne BG-27)',
+    bts: [
+      { bt:'BT-92', note:'Montant de la remise document (BG-20)' },
+      { bt:'BT-93', note:'Montant de base de calcul de la remise' },
+      { bt:'BT-94', note:'Taux de remise (%)' },
+      { bt:'BT-97', note:'Motif de la remise (texte libre)' },
+      { bt:'BT-98', note:'Code motif remise (UNTDID 5189)' },
+    ],
+  },
+  'frais_doc': {
+    icone: '➕', titre: 'Frais globaux sur le document',
+    condition: 'Si des frais s\'ajoutent au montant total (port, emballage, frais de dossier…)',
+    bts: [
+      { bt:'BT-99',  note:'Montant des frais document (BG-21)' },
+      { bt:'BT-102', note:'Code catégorie TVA des frais' },
+      { bt:'BT-104', note:'Motif des frais (texte libre)' },
+    ],
+  },
+  'exoneration_tva': {
+    icone: '📋', titre: 'Exonération, autoliquidation ou hors champ TVA',
+    condition: 'Si une ou plusieurs lignes sont exonérées (E), en autoliquidation (AE), hors champ (O) ou intracommunautaires (K)',
+    bts: [
+      { bt:'BT-120', note:'Motif textuel d\'exonération (ex : "CGI art. 283-2 – autoliquidation")' },
+      { bt:'BT-121', note:'Code motif VATEX (ex : VATEX-EU-AE, VATEX-EU-IC, VATEX-FR-FRANCHISE…)' },
+    ],
+  },
+  'acomptes_prepayment': {
+    icone: '💰', titre: 'Acomptes ou prépaiements déjà versés',
+    condition: 'Si des acomptes ont déjà été encaissés avant la présente facture',
+    bts: [
+      { bt:'BT-113', note:'Montant total des prépaiements déduits du TTC' },
+      { bt:'BT-25',  note:'Référence à la/aux facture(s) d\'acompte précédente(s)' },
+      { bt:'BT-26',  note:'Date de la facture d\'acompte référencée' },
+    ],
+  },
+  'contact_vendeur': {
+    icone: '📞', titre: 'Contact spécifique chez le vendeur',
+    condition: 'Si un interlocuteur précis (commercial, ADV, SAV) doit être communiqué',
+    bts: [
+      { bt:'BT-41', note:'Nom du contact vendeur (BG-6)' },
+      { bt:'BT-42', note:'Téléphone du contact' },
+      { bt:'BT-43', note:'Email du contact' },
+    ],
+  },
+  'contact_acheteur': {
+    icone: '📱', titre: 'Contact spécifique chez l\'acheteur',
+    condition: 'Si un interlocuteur précis (comptabilité, prescripteur) est désigné côté acheteur',
+    bts: [
+      { bt:'BT-56', note:'Nom du contact acheteur (BG-9)' },
+      { bt:'BT-57', note:'Téléphone du contact' },
+      { bt:'BT-58', note:'Email du contact' },
+    ],
+  },
+  'justificatifs': {
+    icone: '📎', titre: 'Documents justificatifs joints ou référencés',
+    condition: 'Si des pièces accompagnent la facture ou sont accessibles par URL',
+    bts: [
+      { bt:'BT-122', note:'Référence du document justificatif (BG-24)' },
+      { bt:'BT-123', note:'Description du document' },
+      { bt:'BT-124', note:'URL d\'accès au document externe' },
+    ],
+  },
+  'devise_tva': {
+    icone: '💱', titre: 'Devise de comptabilisation TVA différente',
+    condition: 'Si la TVA est comptabilisée dans une devise différente de la devise de la facture',
+    bts: [
+      { bt:'BT-6',   note:'Devise de comptabilisation TVA (ISO 4217)' },
+      { bt:'BT-111', note:'Montant TVA total converti dans la devise comptable' },
+    ],
+  },
+  'facture_precedente': {
+    icone: '🔗', titre: 'Facture précédente référencée (BG-3)',
+    condition: 'Si ce document fait référence à un document antérieur (avoir, rectificative, solde…)',
+    bts: [
+      { bt:'BT-25', note:'Numéro de la facture précédente' },
+      { bt:'BT-26', note:'Date de la facture précédente' },
+    ],
+  },
+};
+
+// Mapping cas d'usage → blocs conditionnels applicables
+const BLOCS_PAR_CAS = {
+  'XP-1':  ['livraison','periode','virement','remise_doc','frais_doc','contact_acheteur','justificatifs'],
+  'XP-2':  ['virement','carte','prelevement'],
+  'XP-3':  ['beneficiaire','virement'],
+  'XP-4':  ['beneficiaire','remise_doc'],
+  'XP-5':  ['justificatifs','contact_vendeur'],
+  'XP-6':  ['justificatifs'],
+  'XP-7':  ['carte'],
+  'XP-8':  ['beneficiaire','virement'],
+  'XP-9':  ['beneficiaire','virement'],
+  'XP-10': ['virement'],
+  'XP-11': ['contact_acheteur'],
+  'XP-12': [],
+  'XP-13': ['exoneration_tva','beneficiaire','virement','justificatifs'],
+  'XP-14': ['justificatifs'],
+  'XP-15': ['beneficiaire','virement'],
+  'XP-16': ['exoneration_tva','justificatifs'],
+  'XP-17a':['beneficiaire','virement'],
+  'XP-17b':['beneficiaire'],
+  'XP-18': ['facture_precedente'],
+  'XP-19a':['contact_vendeur'],
+  'XP-19b':[],
+  'XP-20': ['virement','prelevement'],
+  'XP-21': ['acomptes_prepayment','remise_doc','virement'],
+  'XP-22a':['remise_doc','virement'],
+  'XP-22b':['remise_doc','virement'],
+  'XP-23': ['exoneration_tva'],
+  'XP-24': ['virement'],
+  'XP-25': ['acomptes_prepayment'],
+  'XP-26': ['livraison','virement'],
+  'XP-27': ['periode','virement'],
+  'XP-28': ['virement','justificatifs'],
+  'XP-29': ['exoneration_tva'],
+  'XP-30': [],
+  'XP-31': ['exoneration_tva'],
+  'XP-32': ['periode','virement','prelevement'],
+  'XP-33': [],
+  'XP-34': ['facture_precedente','acomptes_prepayment'],
+  'XP-35': ['virement','contact_vendeur'],
+  'XP-36': ['contact_vendeur','justificatifs'],
+  'REF-NOMINAL':      ['livraison','periode','virement','prelevement','carte','remise_doc','frais_doc','justificatifs','contact_vendeur','contact_acheteur'],
+  'REF-REFUS':        ['facture_precedente'],
+  'REF-LITIGE-AVOIR': ['facture_precedente','acomptes_prepayment'],
+  'REF-LITIGE-RECTIF':['facture_precedente'],
+  'REF-DEJA-PAYEE':   ['virement','carte','prelevement'],
+  'REF-TIERS-PAYEUR': ['beneficiaire','virement'],
+  'REF-PARTIEL-TIERS':['beneficiaire','remise_doc'],
+  'REF-FRAIS-COLLAB-B2C':['justificatifs'],
+  'REF-REJET':        [],
+};
+
+// Champs optionnels mais recommandés (utiles en pratique même si non obligatoires)
+const CHAMPS_RECOMMANDES_PAR_CAS = {
+  'XP-1': [
+    { bt:'BT-9',  raison:'Date d\'échéance globale de la facture groupée' },
+    { bt:'BT-10', raison:'Référence acheteur (service / centre de coût destinataire)' },
+    { bt:'BT-20', raison:'Conditions de paiement (délai, mode, pénalités de retard)' },
+    { bt:'BT-22', raison:'Note récapitulative des commandes et livraisons regroupées' },
+  ],
+  'XP-2': [
+    { bt:'BT-82', raison:'Description textuelle du moyen de paiement utilisé' },
+    { bt:'BT-83', raison:'Référence de la transaction ou du reçu de paiement' },
+  ],
+  'XP-3': [
+    { bt:'BT-9',  raison:'Date d\'échéance pour le tiers payeur' },
+    { bt:'BT-20', raison:'Conditions de paiement précisant le rôle et les délais du tiers' },
+    { bt:'BT-82', raison:'Instructions de paiement à l\'attention du tiers' },
+  ],
+  'XP-4': [
+    { bt:'BT-9',  raison:'Date d\'échéance de paiement' },
+    { bt:'BT-20', raison:'Conditions précisant la répartition acheteur / tiers' },
+  ],
+  'XP-5': [
+    { bt:'BT-72', raison:'Date de la dépense (date du ticket ou de l\'achat)' },
+    { bt:'BT-22', raison:'Nature professionnelle de la dépense (obligatoire pour déductibilité)' },
+  ],
+  'XP-7': [
+    { bt:'BT-9',  raison:'Date de débit / relevé de carte' },
+    { bt:'BT-83', raison:'Référence de la transaction carte (rapprochement relevé)' },
+  ],
+  'XP-8': [
+    { bt:'BT-9',  raison:'Date d\'échéance de paiement au factor' },
+    { bt:'BT-20', raison:'Conditions mentionnant la cession de créance au factor' },
+  ],
+  'XP-9': [
+    { bt:'BT-9',  raison:'Date d\'échéance de paiement' },
+    { bt:'BT-15', raison:'Référence avis de réception côté distributeur' },
+  ],
+  'XP-13': [
+    { bt:'BT-22', raison:'Mention légale autoliquidation (obligatoire sur la facture : "Autoliquidation – CGI art. 283-2")' },
+    { bt:'BT-11', raison:'Référence du sous-projet ou lot de travaux concerné' },
+    { bt:'BT-9',  raison:'Date d\'échéance de paiement' },
+  ],
+  'XP-14': [
+    { bt:'BT-22', raison:'Quote-part du co-traitant et référence au groupement / mandataire' },
+    { bt:'BT-9',  raison:'Date d\'échéance de paiement' },
+  ],
+  'XP-16': [
+    { bt:'BT-9',  raison:'Date d\'échéance de remboursement des débours' },
+    { bt:'BT-22', raison:'Texte de la mention légale "Débours – art. 267 II CGI"' },
+  ],
+  'XP-18': [
+    { bt:'BT-9',  raison:'Date limite de règlement de la note de débit' },
+    { bt:'BT-22', raison:'Motif détaillé et calcul du débit' },
+  ],
+  'XP-19b': [
+    { bt:'BT-22', raison:'Mention "Autofacturation" et référence de l\'accord acheteur–vendeur' },
+    { bt:'BT-9',  raison:'Date d\'échéance du paiement au vendeur' },
+  ],
+  'XP-20': [
+    { bt:'BT-9',  raison:'Date d\'échéance du paiement de l\'acompte' },
+    { bt:'BT-20', raison:'Conditions de paiement et calendrier des prochains acomptes' },
+    { bt:'BT-83', raison:'Référence de paiement spécifique à cet acompte' },
+  ],
+  'XP-21': [
+    { bt:'BT-9',  raison:'Date d\'échéance du solde final' },
+    { bt:'BT-20', raison:'Conditions de paiement du solde restant dû' },
+    { bt:'BT-22', raison:'Liste numérotée des acomptes déduits (n° facture + montant)' },
+  ],
+  'XP-22a': [
+    { bt:'BT-9',  raison:'Date d\'échéance normale (si escompte non utilisé)' },
+    { bt:'BT-22', raison:'Calcul TTC avec et sans escompte + date limite de l\'offre' },
+  ],
+  'XP-22b': [
+    { bt:'BT-9',  raison:'Date d\'échéance normale et date limite pour bénéficier de l\'escompte' },
+  ],
+  'XP-24': [
+    { bt:'BT-9',  raison:'Date d\'échéance des arrhes' },
+    { bt:'BT-20', raison:'Conditions d\'annulation et sort des arrhes (perdues ou × 2)' },
+  ],
+  'XP-26': [
+    { bt:'BT-9',  raison:'Date d\'échéance (le transfert de propriété est lié au paiement)' },
+    { bt:'BT-20', raison:'Conditions de paiement intégrant la clause de réserve' },
+  ],
+  'XP-27': [
+    { bt:'BT-9',  raison:'Date d\'échéance du relevé de péage mensuel' },
+    { bt:'BT-10', raison:'Référence du contrat télépage (abonnement Liber-t, Sanef…)' },
+  ],
+  'XP-28': [
+    { bt:'BT-72', raison:'Date du repas (peut différer de la date de facturation)' },
+    { bt:'BT-10', raison:'Référence de la réservation ou du bon de commande entreprise' },
+  ],
+  'XP-29': [
+    { bt:'BT-22', raison:'Mention du régime d\'assujetti unique (art. 256C du CGI)' },
+  ],
+  'XP-31': [
+    { bt:'BT-22', raison:'Note explicative de la ventilation par taux pour faciliter la comptabilisation acheteur' },
+  ],
+  'XP-32': [
+    { bt:'BT-9',  raison:'Prochaine date d\'échéance de paiement' },
+    { bt:'BT-83', raison:'Référence de paiement pour ce cycle (rapprochement automatique)' },
+    { bt:'BT-20', raison:'Conditions : mode de paiement, clause d\'indexation si applicable' },
+  ],
+  'XP-33': [
+    { bt:'BT-72', raison:'Date d\'acquisition du bien d\'occasion (historique du bien)' },
+    { bt:'BT-22', raison:'Description précise du bien : marque, modèle, état, kilométrage…' },
+  ],
+  'XP-35': [
+    { bt:'BT-9',  raison:'Date d\'échéance des royalties' },
+    { bt:'BT-83', raison:'Référence de la transaction de droits (rapprochement SACEM, ADAGP…)' },
+  ],
+  'XP-36': [
+    { bt:'BT-9',  raison:'Date d\'échéance des honoraires' },
+    { bt:'BT-33', raison:'Informations légales du prestataire (forme juridique, Ordre professionnel)' },
+  ],
+  'REF-NOMINAL': [
+    { bt:'BT-9',  raison:'Date d\'échéance de paiement' },
+    { bt:'BT-10', raison:'Référence acheteur (service, centre de coût)' },
+    { bt:'BT-20', raison:'Conditions de paiement (délai, mode, pénalités de retard légales)' },
+    { bt:'BT-13', raison:'Référence bon de commande de l\'acheteur' },
+    { bt:'BT-72', raison:'Date de livraison effective' },
+    { bt:'BT-83', raison:'Référence de paiement à rappeler dans le virement' },
+  ],
+};
+
+// Enrichir les cas d'usage avec blocs conditionnels et champs recommandés
+Object.entries(BLOCS_PAR_CAS).forEach(([id, blocs]) => {
+  if (USE_CASES[id]) USE_CASES[id].blocs_conditionnels = blocs;
+});
+Object.entries(CHAMPS_RECOMMANDES_PAR_CAS).forEach(([id, champs]) => {
+  if (USE_CASES[id]) USE_CASES[id].champs_recommandes = champs;
 });
 
 // ─── Détection automatique du cas d'usage ────────────────────────────────────
