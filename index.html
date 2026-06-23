@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Analyseur FacturX – AFNOR NF Z55-500</title>
+  <title>Vérificateur de facture électronique</title>
   <link rel="stylesheet" href="css/styles.css">
   <!-- PDF.js via CDN -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
@@ -16,8 +16,8 @@
     <div class="header-logo">
       <span class="logo-icone">🧾</span>
       <div class="logo-texte">
-        <span class="logo-titre">Analyseur FacturX</span>
-        <span class="logo-sous">AFNOR NF Z55-500 · EN 16931</span>
+        <span class="logo-titre">Vérificateur de facture</span>
+        <span class="logo-sous">Contrôle de conformité</span>
       </div>
     </div>
     <button id="btn-burger" class="burger-btn" aria-label="Menu" aria-expanded="false">
@@ -41,10 +41,9 @@
   <!-- ── Section d'accueil ─────────────────────────────────────────────────── -->
   <section id="section-accueil" class="section-accueil">
     <div class="accroche">
-      <h1>Analysez vos factures FacturX</h1>
+      <h1>Vérifiez vos factures électroniques</h1>
       <p class="accroche-sous">
-        Identificaton de tous les champs BT/BG selon la norme <strong>AFNOR NF Z55-500</strong>,
-        détection du profil, contrôle de conformité et guide de cas d'usage avec workflows métier.
+        Déposez une facture électronique pour contrôler sa conformité, identifier les informations présentes et consulter les étapes de traitement selon votre situation.
       </p>
     </div>
 
@@ -52,9 +51,9 @@
     <div id="zone-depot" class="zone-depot">
       <input type="file" id="input-fichier" accept=".pdf,.xml,application/pdf,text/xml,application/xml" class="input-cache">
       <div class="depot-icone">📂</div>
-      <p class="depot-titre">Déposez votre facture FacturX ici</p>
+      <p class="depot-titre">Déposez votre facture électronique ici</p>
       <p class="depot-sous">ou <span class="depot-lien">cliquez pour sélectionner un fichier</span></p>
-      <p class="depot-formats">Formats acceptés : <code>PDF</code> (FacturX / ZUGFeRD) · <code>XML</code> (CII)</p>
+      <p class="depot-formats">Formats acceptés : <code>PDF</code> (avec XML intégré) · <code>XML</code></p>
       <div class="depot-separateur"><span>ou</span></div>
       <button id="btn-explorer-exemple" class="btn-exemple">
         ▶ Charger une facture de démonstration
@@ -81,20 +80,20 @@
       <div class="aide-carte">
         <h3>📂 Déposer une facture</h3>
         <ol>
-          <li>Glissez un fichier <strong>PDF FacturX</strong> ou <strong>XML CII</strong> dans la zone de dépôt</li>
-          <li>L'analyseur extrait automatiquement l'XML embarqué dans le PDF</li>
-          <li>Tous les champs BT/BG sont identifiés et affichés</li>
-          <li>Un rapport de conformité est généré selon le profil déclaré (BT-24)</li>
+          <li>Glissez un fichier <strong>PDF</strong> ou <strong>XML</strong> dans la zone de dépôt</li>
+          <li>Les données sont extraites automatiquement depuis le fichier</li>
+          <li>Toutes les informations de la facture sont identifiées et affichées</li>
+          <li>Un rapport de conformité est généré selon le format de la facture</li>
         </ol>
       </div>
       <div class="aide-carte">
         <h3>🔍 Comprendre les résultats</h3>
         <ul>
-          <li><span class="legende-ok">✓ Vert</span> — Champ présent et renseigné</li>
-          <li><span class="legende-erreur">✕ Rouge</span> — Champ obligatoire manquant</li>
-          <li><span class="legende-cond">⚠ Orange</span> — Champ conditionnel absent</li>
-          <li><span class="legende-na">– Gris</span> — Non applicable dans ce profil</li>
-          <li><span class="legende-opt">○ Bleu</span> — Optionnel, non renseigné</li>
+          <li><span class="legende-ok">✓ Vert</span> — Renseigné ✓</li>
+          <li><span class="legende-erreur">✕ Rouge</span> — Information requise manquante</li>
+          <li><span class="legende-cond">⚠ Orange</span> — Non renseigné (facultatif selon le contexte)</li>
+          <li><span class="legende-na">– Gris</span> — Sans objet pour ce type de facture</li>
+          <li><span class="legende-opt">○ Bleu</span> — Non renseigné</li>
         </ul>
       </div>
       <div class="aide-carte">
@@ -108,12 +107,13 @@
         </ul>
       </div>
       <div class="aide-carte">
-        <h3>📋 Champs BT / BG</h3>
-        <p>La norme définit :</p>
+        <h3>📋 Informations de la facture</h3>
+        <p>Chaque information est classée selon son importance :</p>
         <ul>
-          <li><strong>BT</strong> (Business Term) — un champ de données unitaire</li>
-          <li><strong>BG</strong> (Business Group) — un regroupement de champs liés</li>
-          <li>Chaque BT a un niveau par profil : <code>M</code> obligatoire, <code>C</code> conditionnel, <code>O</code> optionnel, <code>N</code> non applicable</li>
+          <li><strong>Obligatoire</strong> — doit être présente dans tous les cas</li>
+          <li><strong>Conditionnelle</strong> — requise selon le type de transaction</li>
+          <li><strong>Optionnelle</strong> — facultative, enrichit la facture si renseignée</li>
+          <li><strong>Sans objet</strong> — non applicable pour ce format de facture</li>
         </ul>
       </div>
       <div class="aide-carte">
@@ -169,7 +169,7 @@
 <!-- ── Pied de page ──────────────────────────────────────────────────────────── -->
 <footer class="app-footer">
   <div class="footer-inner">
-    <p>Analyseur FacturX · Référentiel <strong>AFNOR NF Z55-500</strong> · Norme <strong>EN 16931-1:2017</strong></p>
+    <p>Vérificateur de facture électronique · Norme européenne <strong>EN 16931</strong></p>
     <p class="footer-mention">Application locale — aucune donnée transmise · Traitement 100% navigateur</p>
   </div>
 </footer>

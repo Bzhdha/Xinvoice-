@@ -17,11 +17,11 @@
  */
 
 const PROFILES = {
-  min:  { id: 'min',  label: 'Minimum',   urn: ['urn:factur-x.eu:1p0:minimum'] },
-  bwl:  { id: 'bwl',  label: 'Basic WL',  urn: ['urn:factur-x.eu:1p0:basicwl'] },
-  bas:  { id: 'bas',  label: 'Basic',     urn: ['urn:factur-x.eu:1p0:basic'] },
-  en:   { id: 'en',   label: 'EN 16931',  urn: ['urn:cen.eu:en16931:2017', 'urn:factur-x.eu:1p0:en16931'] },
-  ext:  { id: 'ext',  label: 'Extended',  urn: ['urn:factur-x.eu:1p0:extended'] },
+  min:  { id: 'min',  label: 'Minimal',          urn: ['urn:factur-x.eu:1p0:minimum'] },
+  bwl:  { id: 'bwl',  label: 'Standard allégé',  urn: ['urn:factur-x.eu:1p0:basicwl'] },
+  bas:  { id: 'bas',  label: 'Standard',          urn: ['urn:factur-x.eu:1p0:basic'] },
+  en:   { id: 'en',   label: 'Confort',           urn: ['urn:cen.eu:en16931:2017', 'urn:factur-x.eu:1p0:en16931'] },
+  ext:  { id: 'ext',  label: 'Étendu',            urn: ['urn:factur-x.eu:1p0:extended'] },
 };
 
 // Ordered from least to most complete
@@ -44,29 +44,29 @@ function detectProfileFromUrn(urn) {
 
 // ─── Business Groups ──────────────────────────────────────────────────────────
 const BUSINESS_GROUPS = {
-  'ROOT':  { label: 'Document principal', icon: '📄' },
-  'BG-2':  { label: 'Contrôle du processus',          icon: '⚙️' },
-  'BG-3':  { label: 'Facture précédente référencée',  icon: '🔗' },
-  'BG-4':  { label: 'Vendeur (Seller)',                icon: '🏢' },
-  'BG-5':  { label: 'Adresse postale du vendeur',      icon: '📍' },
-  'BG-6':  { label: 'Contact du vendeur',              icon: '📞' },
-  'BG-7':  { label: 'Acheteur (Buyer)',                icon: '🏦' },
-  'BG-8':  { label: "Adresse postale de l'acheteur",   icon: '📍' },
-  'BG-9':  { label: "Contact de l'acheteur",           icon: '📞' },
-  'BG-10': { label: 'Bénéficiaire (Payee)',            icon: '💳' },
-  'BG-11': { label: 'Représentant fiscal du vendeur',  icon: '📋' },
+  'ROOT':  { label: 'Document principal',              icon: '📄' },
+  'BG-2':  { label: 'Circuit de traitement',           icon: '⚙️' },
+  'BG-3':  { label: 'Facture précédente référencée',   icon: '🔗' },
+  'BG-4':  { label: 'Fournisseur',                     icon: '🏢' },
+  'BG-5':  { label: 'Adresse postale du fournisseur',  icon: '📍' },
+  'BG-6':  { label: 'Contact du fournisseur',          icon: '📞' },
+  'BG-7':  { label: 'Client',                          icon: '🏦' },
+  'BG-8':  { label: "Adresse postale du client",       icon: '📍' },
+  'BG-9':  { label: "Contact du client",               icon: '📞' },
+  'BG-10': { label: 'Bénéficiaire du paiement',        icon: '💳' },
+  'BG-11': { label: 'Représentant fiscal du fournisseur', icon: '📋' },
   'BG-12': { label: 'Adresse du représentant fiscal',  icon: '📍' },
   'BG-13': { label: 'Informations de livraison',       icon: '🚚' },
   'BG-14': { label: "Période de facturation",          icon: '📅' },
   'BG-15': { label: "Adresse de livraison",            icon: '📍' },
   'BG-16': { label: 'Instructions de paiement',        icon: '💰' },
-  'BG-17': { label: 'Virement (Credit Transfer)',      icon: '🏧' },
+  'BG-17': { label: 'Virement bancaire',               icon: '🏧' },
   'BG-18': { label: 'Carte de paiement',               icon: '💳' },
-  'BG-19': { label: 'Prélèvement direct',              icon: '📥' },
-  'BG-20': { label: 'Remises au niveau document',      icon: '🏷️' },
-  'BG-21': { label: 'Frais au niveau document',        icon: '➕' },
+  'BG-19': { label: 'Prélèvement automatique',         icon: '📥' },
+  'BG-20': { label: 'Remises globales',                icon: '🏷️' },
+  'BG-21': { label: 'Frais généraux',                  icon: '➕' },
   'BG-22': { label: 'Totaux du document',              icon: '🧾' },
-  'BG-23': { label: 'Ventilation TVA',                 icon: '📊' },
+  'BG-23': { label: 'Détail de la TVA',                icon: '📊' },
   'BG-24': { label: 'Documents justificatifs joints',  icon: '📎' },
   'BG-25': { label: 'Lignes de facture',               icon: '📝' },
   'BG-26': { label: 'Période de la ligne',             icon: '📅' },
@@ -96,7 +96,7 @@ const FIELDS = {
   // ── BG-2 : Contrôle du processus ─────────────────────────────────────────
   'BT-23': {
     id: 'BT-23', group: 'BG-2',
-    label: 'Type de processus',
+    label: 'Type de traitement',
     description: "Identifie le processus métier dans lequel la facture s'inscrit (ex: facturation BtoB, sous-traitance, etc.)",
     xpath: '//rsm:ExchangedDocumentContext/ram:BusinessProcessSpecifiedDocumentContextParameter/ram:ID',
     type: 'identifier',
@@ -104,7 +104,7 @@ const FIELDS = {
   },
   'BT-24': {
     id: 'BT-24', group: 'BG-2',
-    label: 'Identifiant du profil (BT-24) ★',
+    label: 'Format de la facture ★',
     description: "URN identifiant la spécification ou le profil FacturX : détermine les règles applicables",
     xpath: '//rsm:ExchangedDocumentContext/ram:GuidelineSpecifiedDocumentContextParameter/ram:ID',
     type: 'identifier',
@@ -131,7 +131,7 @@ const FIELDS = {
   },
   'BT-3': {
     id: 'BT-3', group: 'ROOT',
-    label: 'Code type de facture ★',
+    label: 'Nature du document ★',
     description: "Code UNTDID 1001 identifiant le type de document (380=Facture, 381=Avoir, 384=Facture corrective…)",
     xpath: '//rsm:ExchangedDocument/ram:TypeCode',
     type: 'code',
@@ -177,7 +177,7 @@ const FIELDS = {
   },
   'BT-6': {
     id: 'BT-6', group: 'ROOT',
-    label: 'Devise de comptabilisation TVA',
+    label: 'Devise pour la TVA',
     description: "Devise utilisée pour la comptabilisation de la TVA (si différente de la devise de la facture)",
     xpath: '//ram:ApplicableHeaderTradeSettlement/ram:TaxCurrencyCode',
     type: 'code',
@@ -186,7 +186,7 @@ const FIELDS = {
   },
   'BT-7': {
     id: 'BT-7', group: 'ROOT',
-    label: "Date du fait générateur de TVA",
+    label: "Date de livraison ou de prestation",
     description: "Date à laquelle la TVA devient exigible (si différente de la date de facture)",
     xpath: '//ram:ApplicableHeaderTradeSettlement/ram:ApplicableTradeTax[1]/ram:TaxPointDate/udt:DateString',
     type: 'date',
@@ -194,7 +194,7 @@ const FIELDS = {
   },
   'BT-8': {
     id: 'BT-8', group: 'ROOT',
-    label: "Code date du fait générateur TVA",
+    label: "Type d'exigibilité TVA",
     description: "Code UNTDID 2005 précisant quand la TVA est due",
     xpath: '//ram:ApplicableHeaderTradeSettlement/ram:ApplicableTradeTax[1]/ram:DueDateTypeCode',
     type: 'code',
@@ -268,7 +268,15 @@ const FIELDS = {
   'BT-17': {
     id: 'BT-17', group: 'ROOT',
     label: "Référence appel d'offres / lot",
-    description: "Référence à un appel d'offres ou un lot spécifique",
+    description: "Référence à un appel d'offres ou un lot spécifique (TypeCode=50)",
+    xpath: '//ram:ApplicableHeaderTradeAgreement/ram:AdditionalReferencedDocument[ram:TypeCode="50"]/ram:IssuerAssignedID',
+    type: 'identifier',
+    profiles: { min: 'N', bwl: 'N', bas: 'O', en: 'O', ext: 'O' },
+  },
+  'BT-18': {
+    id: 'BT-18', group: 'ROOT',
+    label: "Identifiant d'objet facturé",
+    description: "Identifiant lié à l'objet facturé (TypeCode=130 avec ReferenceTypeCode)",
     xpath: '//ram:ApplicableHeaderTradeAgreement/ram:AdditionalReferencedDocument[ram:TypeCode="130"]/ram:IssuerAssignedID',
     type: 'identifier',
     profiles: { min: 'N', bwl: 'N', bas: 'O', en: 'O', ext: 'O' },
@@ -293,7 +301,7 @@ const FIELDS = {
   // ── BG-4 : Vendeur ────────────────────────────────────────────────────────
   'BT-27': {
     id: 'BT-27', group: 'BG-4',
-    label: 'Nom du vendeur ★',
+    label: 'Nom du fournisseur ★',
     description: "Raison sociale complète du vendeur",
     xpath: `${_BASE.SELLER}/ram:Name`,
     type: 'text',
@@ -301,7 +309,7 @@ const FIELDS = {
   },
   'BT-28': {
     id: 'BT-28', group: 'BG-4',
-    label: 'Nom commercial du vendeur',
+    label: 'Nom commercial du fournisseur',
     description: "Nom commercial ou enseigne du vendeur (si différent de la raison sociale)",
     xpath: `${_BASE.SELLER}/ram:SpecifiedLegalOrganization/ram:TradingBusinessName`,
     type: 'text',
@@ -309,15 +317,15 @@ const FIELDS = {
   },
   'BT-29': {
     id: 'BT-29', group: 'BG-4',
-    label: 'Identifiant du vendeur',
-    description: "Identifiant propre du vendeur (peut inclure un code schéma)",
-    xpath: `${_BASE.SELLER}/ram:GlobalID`,
+    label: 'Identifiant du fournisseur',
+    description: "Identifiant propre du vendeur (ram:ID non schémé, ou ram:GlobalID schémé)",
+    xpath: `${_BASE.SELLER}/ram:ID`,
     type: 'identifier',
     profiles: { min: 'N', bwl: 'O', bas: 'O', en: 'O', ext: 'O' },
   },
   'BT-30': {
     id: 'BT-30', group: 'BG-4',
-    label: 'Numéro SIREN/Identifiant légal vendeur ★',
+    label: 'Numéro SIREN du fournisseur ★',
     description: "Identifiant légal d'enregistrement du vendeur (SIREN en France, schéma 0002)",
     xpath: `${_BASE.SELLER}/ram:SpecifiedLegalOrganization/ram:ID`,
     type: 'identifier',
@@ -326,7 +334,7 @@ const FIELDS = {
   },
   'BT-31': {
     id: 'BT-31', group: 'BG-4',
-    label: 'Numéro TVA intracommunautaire vendeur ★',
+    label: 'Numéro de TVA européen du fournisseur ★',
     description: "Numéro de TVA intracommunautaire du vendeur (schéma VA)",
     xpath: `${_BASE.SELLER}/ram:SpecifiedTaxRegistration[ram:ID/@schemeID='VA']/ram:ID`,
     type: 'identifier',
@@ -335,7 +343,7 @@ const FIELDS = {
   },
   'BT-32': {
     id: 'BT-32', group: 'BG-4',
-    label: 'Identifiant fiscal vendeur',
+    label: 'Identifiant fiscal du fournisseur',
     description: "Identifiant fiscal national du vendeur (schéma FC)",
     xpath: `${_BASE.SELLER}/ram:SpecifiedTaxRegistration[ram:ID/@schemeID='FC']/ram:ID`,
     type: 'identifier',
@@ -343,7 +351,7 @@ const FIELDS = {
   },
   'BT-33': {
     id: 'BT-33', group: 'BG-4',
-    label: 'Informations légales complémentaires vendeur',
+    label: 'Mentions légales du fournisseur',
     description: "Informations légales additionnelles (ex: forme juridique, capital social)",
     xpath: `${_BASE.SELLER}/ram:Description`,
     type: 'text',
@@ -351,7 +359,7 @@ const FIELDS = {
   },
   'BT-34': {
     id: 'BT-34', group: 'BG-4',
-    label: 'Adresse électronique vendeur',
+    label: 'Adresse e-mail du fournisseur',
     description: "Adresse électronique (URI) du vendeur pour la facturation électronique",
     xpath: `${_BASE.SELLER}/ram:URIUniversalCommunication/ram:URIID`,
     type: 'identifier',
@@ -401,7 +409,7 @@ const FIELDS = {
   },
   'BT-39': {
     id: 'BT-39', group: 'BG-5',
-    label: 'Subdivision pays vendeur',
+    label: 'Région / Département du fournisseur',
     description: "Région, département ou province du vendeur",
     xpath: `${_BASE.SELLER}/ram:PostalTradeAddress/ram:CountrySubDivisionName`,
     type: 'text',
@@ -420,7 +428,7 @@ const FIELDS = {
   // ── BG-6 : Contact du vendeur ─────────────────────────────────────────────
   'BT-41': {
     id: 'BT-41', group: 'BG-6',
-    label: 'Nom du contact vendeur',
+    label: 'Contact du fournisseur',
     description: "Nom de la personne à contacter chez le vendeur",
     xpath: `${_BASE.SELLER}/ram:DefinedTradeContact/ram:PersonName`,
     type: 'text',
@@ -428,7 +436,7 @@ const FIELDS = {
   },
   'BT-42': {
     id: 'BT-42', group: 'BG-6',
-    label: 'Téléphone du contact vendeur',
+    label: 'Téléphone du fournisseur',
     description: "Numéro de téléphone du contact vendeur",
     xpath: `${_BASE.SELLER}/ram:DefinedTradeContact/ram:TelephoneUniversalCommunication/ram:CompleteNumber`,
     type: 'text',
@@ -436,7 +444,7 @@ const FIELDS = {
   },
   'BT-43': {
     id: 'BT-43', group: 'BG-6',
-    label: 'Email du contact vendeur',
+    label: 'E-mail du fournisseur',
     description: "Adresse email du contact vendeur",
     xpath: `${_BASE.SELLER}/ram:DefinedTradeContact/ram:EmailURIUniversalCommunication/ram:URIID`,
     type: 'text',
@@ -446,7 +454,7 @@ const FIELDS = {
   // ── BG-7 : Acheteur ───────────────────────────────────────────────────────
   'BT-44': {
     id: 'BT-44', group: 'BG-7',
-    label: "Nom de l'acheteur ★",
+    label: "Nom du client ★",
     description: "Raison sociale complète de l'acheteur",
     xpath: `${_BASE.BUYER}/ram:Name`,
     type: 'text',
@@ -454,7 +462,7 @@ const FIELDS = {
   },
   'BT-45': {
     id: 'BT-45', group: 'BG-7',
-    label: "Nom commercial de l'acheteur",
+    label: "Nom commercial du client",
     description: "Nom commercial ou enseigne de l'acheteur",
     xpath: `${_BASE.BUYER}/ram:SpecifiedLegalOrganization/ram:TradingBusinessName`,
     type: 'text',
@@ -462,7 +470,7 @@ const FIELDS = {
   },
   'BT-46': {
     id: 'BT-46', group: 'BG-7',
-    label: "Identifiant de l'acheteur",
+    label: "Identifiant du client",
     description: "Identifiant propre de l'acheteur",
     xpath: `${_BASE.BUYER}/ram:ID`,
     type: 'identifier',
@@ -470,7 +478,7 @@ const FIELDS = {
   },
   'BT-47': {
     id: 'BT-47', group: 'BG-7',
-    label: "SIREN/Identifiant légal acheteur",
+    label: "Numéro SIREN du client",
     description: "Identifiant légal d'enregistrement de l'acheteur (SIREN en France)",
     xpath: `${_BASE.BUYER}/ram:SpecifiedLegalOrganization/ram:ID`,
     type: 'identifier',
@@ -479,7 +487,7 @@ const FIELDS = {
   },
   'BT-48': {
     id: 'BT-48', group: 'BG-7',
-    label: "Numéro TVA acheteur",
+    label: "Numéro de TVA du client",
     description: "Numéro de TVA intracommunautaire de l'acheteur",
     xpath: `${_BASE.BUYER}/ram:SpecifiedTaxRegistration[ram:ID/@schemeID='VA']/ram:ID`,
     type: 'identifier',
@@ -488,7 +496,7 @@ const FIELDS = {
   },
   'BT-49': {
     id: 'BT-49', group: 'BG-7',
-    label: "Adresse électronique acheteur",
+    label: "Adresse e-mail du client",
     description: "Adresse électronique (URI) de l'acheteur pour la facturation électronique",
     xpath: `${_BASE.BUYER}/ram:URIUniversalCommunication/ram:URIID`,
     type: 'identifier',
@@ -519,28 +527,28 @@ const FIELDS = {
   },
   'BT-52': {
     id: 'BT-52', group: 'BG-8',
-    label: "Ville de l'acheteur",
+    label: "Ville du client",
     xpath: `${_BASE.BUYER}/ram:PostalTradeAddress/ram:CityName`,
     type: 'text',
     profiles: { min: 'N', bwl: 'O', bas: 'O', en: 'O', ext: 'O' },
   },
   'BT-53': {
     id: 'BT-53', group: 'BG-8',
-    label: "Code postal acheteur",
+    label: "Code postal du client",
     xpath: `${_BASE.BUYER}/ram:PostalTradeAddress/ram:PostcodeCode`,
     type: 'text',
     profiles: { min: 'N', bwl: 'O', bas: 'O', en: 'O', ext: 'O' },
   },
   'BT-54': {
     id: 'BT-54', group: 'BG-8',
-    label: "Subdivision pays acheteur",
+    label: "Région / Département du client",
     xpath: `${_BASE.BUYER}/ram:PostalTradeAddress/ram:CountrySubDivisionName`,
     type: 'text',
     profiles: { min: 'N', bwl: 'O', bas: 'O', en: 'O', ext: 'O' },
   },
   'BT-55': {
     id: 'BT-55', group: 'BG-8',
-    label: "Pays de l'acheteur",
+    label: "Pays du client",
     description: "Code ISO 3166-1 alpha-2 du pays de l'acheteur",
     xpath: `${_BASE.BUYER}/ram:PostalTradeAddress/ram:CountryID`,
     type: 'code',
@@ -551,21 +559,21 @@ const FIELDS = {
   // ── BG-9 : Contact acheteur ───────────────────────────────────────────────
   'BT-56': {
     id: 'BT-56', group: 'BG-9',
-    label: "Nom du contact acheteur",
+    label: "Contact du client",
     xpath: `${_BASE.BUYER}/ram:DefinedTradeContact/ram:PersonName`,
     type: 'text',
     profiles: { min: 'N', bwl: 'N', bas: 'O', en: 'O', ext: 'O' },
   },
   'BT-57': {
     id: 'BT-57', group: 'BG-9',
-    label: "Téléphone contact acheteur",
+    label: "Téléphone du client",
     xpath: `${_BASE.BUYER}/ram:DefinedTradeContact/ram:TelephoneUniversalCommunication/ram:CompleteNumber`,
     type: 'text',
     profiles: { min: 'N', bwl: 'N', bas: 'O', en: 'O', ext: 'O' },
   },
   'BT-58': {
     id: 'BT-58', group: 'BG-9',
-    label: "Email contact acheteur",
+    label: "E-mail du client",
     xpath: `${_BASE.BUYER}/ram:DefinedTradeContact/ram:EmailURIUniversalCommunication/ram:URIID`,
     type: 'text',
     profiles: { min: 'N', bwl: 'N', bas: 'O', en: 'O', ext: 'O' },
@@ -598,7 +606,7 @@ const FIELDS = {
   // ── BG-11 : Représentant fiscal du vendeur ────────────────────────────────
   'BT-62': {
     id: 'BT-62', group: 'BG-11',
-    label: "Nom du représentant fiscal vendeur",
+    label: "Nom du représentant fiscal du fournisseur",
     description: "Nom du mandataire fiscal du vendeur (cas d'autoliquidation ou de ventes à distance)",
     xpath: '//ram:ApplicableHeaderTradeAgreement/ram:SellerTaxRepresentativeTradeParty/ram:Name',
     type: 'text',
@@ -606,10 +614,55 @@ const FIELDS = {
   },
   'BT-63': {
     id: 'BT-63', group: 'BG-11',
-    label: "TVA du représentant fiscal vendeur",
+    label: "TVA du représentant fiscal du fournisseur",
     xpath: '//ram:ApplicableHeaderTradeAgreement/ram:SellerTaxRepresentativeTradeParty/ram:SpecifiedTaxRegistration[ram:ID/@schemeID="VA"]/ram:ID',
     type: 'identifier',
     profiles: { min: 'N', bwl: 'C', bas: 'C', en: 'C', ext: 'C' },
+  },
+
+  // ── BG-12 : Adresse du représentant fiscal ───────────────────────────────
+  'BT-64': {
+    id: 'BT-64', group: 'BG-12',
+    label: "Adresse représentant fiscal – Ligne 1",
+    xpath: '//ram:ApplicableHeaderTradeAgreement/ram:SellerTaxRepresentativeTradeParty/ram:PostalTradeAddress/ram:LineOne',
+    type: 'text',
+    profiles: { min: 'N', bwl: 'C', bas: 'C', en: 'C', ext: 'C' },
+  },
+  'BT-65': {
+    id: 'BT-65', group: 'BG-12',
+    label: "Adresse représentant fiscal – Ligne 2",
+    xpath: '//ram:ApplicableHeaderTradeAgreement/ram:SellerTaxRepresentativeTradeParty/ram:PostalTradeAddress/ram:LineTwo',
+    type: 'text',
+    profiles: { min: 'N', bwl: 'O', bas: 'O', en: 'O', ext: 'O' },
+  },
+  'BT-66': {
+    id: 'BT-66', group: 'BG-12',
+    label: "Localité du représentant fiscal",
+    xpath: '//ram:ApplicableHeaderTradeAgreement/ram:SellerTaxRepresentativeTradeParty/ram:PostalTradeAddress/ram:CityName',
+    type: 'text',
+    profiles: { min: 'N', bwl: 'C', bas: 'C', en: 'C', ext: 'C' },
+  },
+  'BT-67': {
+    id: 'BT-67', group: 'BG-12',
+    label: "Code postal du représentant fiscal",
+    xpath: '//ram:ApplicableHeaderTradeAgreement/ram:SellerTaxRepresentativeTradeParty/ram:PostalTradeAddress/ram:PostcodeCode',
+    type: 'text',
+    profiles: { min: 'N', bwl: 'O', bas: 'O', en: 'O', ext: 'O' },
+  },
+  'BT-68': {
+    id: 'BT-68', group: 'BG-12',
+    label: "Région / Département du représentant fiscal",
+    xpath: '//ram:ApplicableHeaderTradeAgreement/ram:SellerTaxRepresentativeTradeParty/ram:PostalTradeAddress/ram:CountrySubDivisionName',
+    type: 'text',
+    profiles: { min: 'N', bwl: 'O', bas: 'O', en: 'O', ext: 'O' },
+  },
+  'BT-69': {
+    id: 'BT-69', group: 'BG-12',
+    label: "Pays du représentant fiscal",
+    xpath: '//ram:ApplicableHeaderTradeAgreement/ram:SellerTaxRepresentativeTradeParty/ram:PostalTradeAddress/ram:CountryID',
+    type: 'code',
+    profiles: { min: 'N', bwl: 'C', bas: 'C', en: 'C', ext: 'C' },
+    codeList: 'ISO 3166-1 alpha-2',
   },
 
   // ── BG-13 : Livraison ─────────────────────────────────────────────────────
@@ -623,7 +676,7 @@ const FIELDS = {
   'BT-71': {
     id: 'BT-71', group: 'BG-13',
     label: "Identifiant lieu de livraison",
-    xpath: `${_BASE.DELIVERY}/ram:ShipToTradeParty/ram:GlobalID`,
+    xpath: `${_BASE.DELIVERY}/ram:ShipToTradeParty/ram:ID`,
     type: 'identifier',
     profiles: { min: 'N', bwl: 'N', bas: 'O', en: 'O', ext: 'O' },
   },
@@ -659,17 +712,31 @@ const FIELDS = {
     type: 'text',
     profiles: { min: 'N', bwl: 'N', bas: 'O', en: 'O', ext: 'O' },
   },
+  'BT-76': {
+    id: 'BT-76', group: 'BG-15',
+    label: "Adresse livraison – Ligne 2",
+    xpath: `${_BASE.DELIVERY}/ram:ShipToTradeParty/ram:PostalTradeAddress/ram:LineTwo`,
+    type: 'text',
+    profiles: { min: 'N', bwl: 'N', bas: 'O', en: 'O', ext: 'O' },
+  },
+  'BT-77': {
+    id: 'BT-77', group: 'BG-15',
+    label: "Localité de livraison",
+    xpath: `${_BASE.DELIVERY}/ram:ShipToTradeParty/ram:PostalTradeAddress/ram:CityName`,
+    type: 'text',
+    profiles: { min: 'N', bwl: 'N', bas: 'O', en: 'O', ext: 'O' },
+  },
   'BT-78': {
     id: 'BT-78', group: 'BG-15',
-    label: "Ville de livraison",
-    xpath: `${_BASE.DELIVERY}/ram:ShipToTradeParty/ram:PostalTradeAddress/ram:CityName`,
+    label: "Code postal de livraison",
+    xpath: `${_BASE.DELIVERY}/ram:ShipToTradeParty/ram:PostalTradeAddress/ram:PostcodeCode`,
     type: 'text',
     profiles: { min: 'N', bwl: 'N', bas: 'O', en: 'O', ext: 'O' },
   },
   'BT-79': {
     id: 'BT-79', group: 'BG-15',
-    label: "Code postal livraison",
-    xpath: `${_BASE.DELIVERY}/ram:ShipToTradeParty/ram:PostalTradeAddress/ram:PostcodeCode`,
+    label: "Région / Département de livraison",
+    xpath: `${_BASE.DELIVERY}/ram:ShipToTradeParty/ram:PostalTradeAddress/ram:CountrySubDivisionName`,
     type: 'text',
     profiles: { min: 'N', bwl: 'N', bas: 'O', en: 'O', ext: 'O' },
   },
@@ -685,7 +752,7 @@ const FIELDS = {
   // ── BG-16 : Instructions de paiement ─────────────────────────────────────
   'BT-81': {
     id: 'BT-81', group: 'BG-16',
-    label: "Code moyen de paiement",
+    label: "Mode de paiement",
     description: "Code UNTDID 4461 du moyen de paiement (30=Virement, 49=Prélèvement, 58=SEPA Credit Transfer…)",
     xpath: `${_BASE.SETTLEMENT}/ram:SpecifiedTradeSettlementPaymentMeans/ram:TypeCode`,
     type: 'code',
@@ -694,7 +761,7 @@ const FIELDS = {
   },
   'BT-82': {
     id: 'BT-82', group: 'BG-16',
-    label: "Texte moyen de paiement",
+    label: "Libellé du mode de paiement",
     xpath: `${_BASE.SETTLEMENT}/ram:SpecifiedTradeSettlementPaymentMeans/ram:Information`,
     type: 'text',
     profiles: { min: 'N', bwl: 'O', bas: 'O', en: 'O', ext: 'O' },
@@ -725,7 +792,7 @@ const FIELDS = {
   },
   'BT-86': {
     id: 'BT-86', group: 'BG-17',
-    label: "BIC de la banque bénéficiaire",
+    label: "Code BIC de la banque",
     xpath: `${_BASE.SETTLEMENT}/ram:SpecifiedTradeSettlementPaymentMeans/ram:PayeeSpecifiedCreditorFinancialInstitution/ram:BICID`,
     type: 'identifier',
     profiles: { min: 'N', bwl: 'O', bas: 'O', en: 'O', ext: 'O' },
@@ -764,7 +831,7 @@ const FIELDS = {
   },
   'BT-91': {
     id: 'BT-91', group: 'BG-19',
-    label: "IBAN compte à débiter",
+    label: "IBAN du compte à débiter",
     xpath: `${_BASE.SETTLEMENT}/ram:SpecifiedTradeSettlementPaymentMeans/ram:PayerPartyDebtorFinancialAccount/ram:IBANID`,
     type: 'identifier',
     profiles: { min: 'N', bwl: 'N', bas: 'C', en: 'C', ext: 'C' },
@@ -830,12 +897,33 @@ const FIELDS = {
     type: 'amount',
     profiles: { min: 'N', bwl: 'N', bas: 'O', en: 'O', ext: 'O' },
   },
+  'BT-100': {
+    id: 'BT-100', group: 'BG-21',
+    label: "Montant de base des frais",
+    xpath: `${_BASE.SETTLEMENT}/ram:SpecifiedTradeAllowanceCharge[ram:ChargeIndicator/udt:Indicator='true']/ram:BasisAmount`,
+    type: 'amount',
+    profiles: { min: 'N', bwl: 'N', bas: 'C', en: 'C', ext: 'C' },
+  },
+  'BT-101': {
+    id: 'BT-101', group: 'BG-21',
+    label: "Pourcentage des frais",
+    xpath: `${_BASE.SETTLEMENT}/ram:SpecifiedTradeAllowanceCharge[ram:ChargeIndicator/udt:Indicator='true']/ram:CalculationPercent`,
+    type: 'percent',
+    profiles: { min: 'N', bwl: 'N', bas: 'C', en: 'C', ext: 'C' },
+  },
   'BT-102': {
     id: 'BT-102', group: 'BG-21',
     label: "Code TVA des frais",
     xpath: `${_BASE.SETTLEMENT}/ram:SpecifiedTradeAllowanceCharge[ram:ChargeIndicator/udt:Indicator='true']/ram:CategoryTradeTax/ram:CategoryCode`,
     type: 'code',
     profiles: { min: 'N', bwl: 'N', bas: 'M', en: 'M', ext: 'M' },
+  },
+  'BT-103': {
+    id: 'BT-103', group: 'BG-21',
+    label: "Taux TVA des frais",
+    xpath: `${_BASE.SETTLEMENT}/ram:SpecifiedTradeAllowanceCharge[ram:ChargeIndicator/udt:Indicator='true']/ram:CategoryTradeTax/ram:RateApplicablePercent`,
+    type: 'percent',
+    profiles: { min: 'N', bwl: 'N', bas: 'C', en: 'C', ext: 'C' },
   },
   'BT-104': {
     id: 'BT-104', group: 'BG-21',
@@ -844,11 +932,19 @@ const FIELDS = {
     type: 'text',
     profiles: { min: 'N', bwl: 'N', bas: 'C', en: 'C', ext: 'C' },
   },
+  'BT-105': {
+    id: 'BT-105', group: 'BG-21',
+    label: "Code motif des frais",
+    xpath: `${_BASE.SETTLEMENT}/ram:SpecifiedTradeAllowanceCharge[ram:ChargeIndicator/udt:Indicator='true']/ram:ReasonCode`,
+    type: 'code',
+    profiles: { min: 'N', bwl: 'N', bas: 'C', en: 'C', ext: 'C' },
+    codeList: 'UNTDID 7161',
+  },
 
   // ── BG-22 : Totaux du document ────────────────────────────────────────────
   'BT-106': {
     id: 'BT-106', group: 'BG-22',
-    label: "Total HT des lignes ★",
+    label: "Total des articles hors taxes ★",
     description: "Somme de tous les montants nets des lignes de facture",
     xpath: `${_BASE.TOTALS}/ram:LineTotalAmount`,
     type: 'amount',
@@ -870,7 +966,7 @@ const FIELDS = {
   },
   'BT-109': {
     id: 'BT-109', group: 'BG-22',
-    label: "Total HT de la facture ★",
+    label: "Total hors taxes ★",
     description: "Montant total de la facture hors TVA",
     xpath: `${_BASE.TOTALS}/ram:TaxBasisTotalAmount`,
     type: 'amount',
@@ -878,7 +974,7 @@ const FIELDS = {
   },
   'BT-110': {
     id: 'BT-110', group: 'BG-22',
-    label: "Montant total TVA ★",
+    label: "Total TVA ★",
     description: "Montant total de la TVA de la facture",
     xpath: `${_BASE.TOTALS}/ram:TaxTotalAmount`,
     type: 'amount',
@@ -886,7 +982,7 @@ const FIELDS = {
   },
   'BT-111': {
     id: 'BT-111', group: 'BG-22',
-    label: "TVA totale en devise comptable",
+    label: "TVA en devise de comptabilisation",
     description: "Montant total TVA converti dans la devise de comptabilisation (si différente)",
     xpath: `${_BASE.TOTALS}/ram:TaxTotalAmount[@currencyID]`,
     type: 'amount',
@@ -894,7 +990,7 @@ const FIELDS = {
   },
   'BT-112': {
     id: 'BT-112', group: 'BG-22',
-    label: "Total TTC de la facture ★",
+    label: "Total à payer (TTC) ★",
     description: "Montant total de la facture TVA incluse",
     xpath: `${_BASE.TOTALS}/ram:GrandTotalAmount`,
     type: 'amount',
@@ -902,7 +998,7 @@ const FIELDS = {
   },
   'BT-113': {
     id: 'BT-113', group: 'BG-22',
-    label: "Montant déjà payé",
+    label: "Acomptes déjà versés",
     description: "Somme déjà versée (acomptes, prépaiements)",
     xpath: `${_BASE.TOTALS}/ram:TotalPrepaidAmount`,
     type: 'amount',
@@ -917,7 +1013,7 @@ const FIELDS = {
   },
   'BT-115': {
     id: 'BT-115', group: 'BG-22',
-    label: "Montant dû ★",
+    label: "Reste à payer ★",
     description: "Montant restant à payer (TTC moins acomptes moins arrondi)",
     xpath: `${_BASE.TOTALS}/ram:DuePayableAmount`,
     type: 'amount',
@@ -927,7 +1023,7 @@ const FIELDS = {
   // ── BG-23 : Ventilation TVA ───────────────────────────────────────────────
   'BT-116': {
     id: 'BT-116', group: 'BG-23',
-    label: "Base imposable TVA",
+    label: "Montant soumis à TVA",
     description: "Montant total imposable pour chaque catégorie de TVA",
     xpath: `${_BASE.SETTLEMENT}/ram:ApplicableTradeTax/ram:BasisAmount`,
     type: 'amount',
@@ -943,7 +1039,7 @@ const FIELDS = {
   },
   'BT-118': {
     id: 'BT-118', group: 'BG-23',
-    label: "Code catégorie TVA ★",
+    label: "Type de TVA ★",
     description: "Code de catégorie TVA (S=Standard, Z=Zéro, E=Exonéré, AE=Autoliquidation, K=Intracommunautaire…)",
     xpath: `${_BASE.SETTLEMENT}/ram:ApplicableTradeTax/ram:CategoryCode`,
     type: 'code',
@@ -961,7 +1057,7 @@ const FIELDS = {
   },
   'BT-120': {
     id: 'BT-120', group: 'BG-23',
-    label: "Motif d'exonération TVA",
+    label: "Raison d'exonération TVA",
     xpath: `${_BASE.SETTLEMENT}/ram:ApplicableTradeTax/ram:ExemptionReason`,
     type: 'text',
     profiles: { min: 'N', bwl: 'C', bas: 'C', en: 'C', ext: 'C' },
@@ -969,7 +1065,7 @@ const FIELDS = {
   },
   'BT-121': {
     id: 'BT-121', group: 'BG-23',
-    label: "Code motif d'exonération",
+    label: "Code de l'exonération TVA",
     xpath: `${_BASE.SETTLEMENT}/ram:ApplicableTradeTax/ram:ExemptionReasonCode`,
     type: 'code',
     profiles: { min: 'N', bwl: 'C', bas: 'C', en: 'C', ext: 'C' },
@@ -993,7 +1089,7 @@ const FIELDS = {
   },
   'BT-124': {
     id: 'BT-124', group: 'BG-24',
-    label: "URL document externe",
+    label: "Lien vers le document",
     xpath: `${_BASE.SETTLEMENT}/ram:AdditionalReferencedDocument/ram:URIID`,
     type: 'identifier',
     profiles: { min: 'N', bwl: 'N', bas: 'O', en: 'O', ext: 'O' },
@@ -1019,8 +1115,8 @@ const LINE_FIELDS = {
   },
   'BT-128': {
     id: 'BT-128', group: 'BG-25',
-    label: "Identifiant objet de la ligne",
-    xpath: 'ram:AssociatedDocumentLineDocument/ram:AdditionalReferencedDocument/ram:IssuerAssignedID',
+    label: "Référence de l'article en ligne",
+    xpath: 'ram:SpecifiedLineTradeSettlement/ram:AdditionalReferencedDocument/ram:IssuerAssignedID',
     type: 'identifier',
     profiles: { min: 'N', bwl: 'N', bas: 'O', en: 'O', ext: 'O' },
   },
@@ -1092,14 +1188,14 @@ const LINE_FIELDS = {
   // BG-30 : TVA ligne
   'BT-151': {
     id: 'BT-151', group: 'BG-30',
-    label: "Code TVA article ★",
+    label: "Catégorie TVA de l'article ★",
     xpath: 'ram:SpecifiedLineTradeSettlement/ram:ApplicableTradeTax/ram:CategoryCode',
     type: 'code',
     profiles: { min: 'N', bwl: 'N', bas: 'M', en: 'M', ext: 'M' },
   },
   'BT-152': {
     id: 'BT-152', group: 'BG-30',
-    label: "Taux TVA article",
+    label: "Taux de TVA de l'article",
     xpath: 'ram:SpecifiedLineTradeSettlement/ram:ApplicableTradeTax/ram:RateApplicablePercent',
     type: 'percent',
     profiles: { min: 'N', bwl: 'N', bas: 'C', en: 'C', ext: 'C' },
@@ -1135,7 +1231,7 @@ const LINE_FIELDS = {
   },
   'BT-157': {
     id: 'BT-157', group: 'BG-31',
-    label: "Code article (standard)",
+    label: "Référence produit standard",
     description: "Identifiant standard de l'article (ex: GTIN/EAN)",
     xpath: 'ram:SpecifiedTradeProduct/ram:GlobalID',
     type: 'identifier',
@@ -1143,7 +1239,7 @@ const LINE_FIELDS = {
   },
   'BT-158': {
     id: 'BT-158', group: 'BG-31',
-    label: "Classification de l'article",
+    label: "Catégorie de produit",
     xpath: 'ram:SpecifiedTradeProduct/ram:DesignatedProductClassification/ram:ClassCode',
     type: 'code',
     profiles: { min: 'N', bwl: 'N', bas: 'O', en: 'O', ext: 'O' },

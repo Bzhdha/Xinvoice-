@@ -328,14 +328,14 @@ function creerEnteteFaturce(r) {
       </div>
       <div class="entete-parties">
         <div class="partie vendeur">
-          <span class="label-petit">Vendeur</span>
+          <span class="label-petit">Fournisseur</span>
           <strong>${escHtml(v('BT-27') || '–')}</strong>
           ${v('BT-30') ? `<small>SIREN : ${escHtml(v('BT-30'))}</small>` : ''}
           ${v('BT-31') ? `<small>TVA : ${escHtml(v('BT-31'))}</small>` : ''}
         </div>
         <div class="fleche-parties">→</div>
         <div class="partie acheteur">
-          <span class="label-petit">Acheteur</span>
+          <span class="label-petit">Client</span>
           <strong>${escHtml(v('BT-44') || '–')}</strong>
           ${v('BT-47') ? `<small>SIREN : ${escHtml(v('BT-47'))}</small>` : ''}
           ${v('BT-48') ? `<small>TVA : ${escHtml(v('BT-48'))}</small>` : ''}
@@ -423,7 +423,7 @@ function creerBanniereAlertes(alertes) {
 function creerOnglets() {
   const ongletsDef = [
     { id: 'synthese',    label: '📊 Synthèse' },
-    { id: 'champs',      label: '🔍 Champs BT/BG' },
+    { id: 'champs',      label: '🔍 Champs' },
     { id: 'tva',         label: '📋 TVA' },
     { id: 'lignes',      label: '📝 Lignes' },
     { id: 'profils',     label: '🏅 Profils' },
@@ -484,7 +484,7 @@ function renderSynthese(r) {
     { bt: 'BT-2',  label: 'Date' },
     { bt: 'BT-3',  label: 'Type' },
     { bt: 'BT-5',  label: 'Devise' },
-    { bt: 'BT-10', label: 'Réf. acheteur' },
+    { bt: 'BT-10', label: 'Réf. client' },
     { bt: 'BT-12', label: 'Réf. contrat' },
     { bt: 'BT-13', label: 'Bon de commande' },
     { bt: 'BT-9',  label: 'Échéance' },
@@ -508,9 +508,9 @@ function renderSynthese(r) {
       </div>
 
       <div class="carte-synthese">
-        <h3>Vendeur</h3>
+        <h3>Fournisseur</h3>
         <dl>
-          ${[['BT-27','Nom'],['BT-28','Nom commercial'],['BT-30','SIREN'],['BT-31','TVA intra'],
+          ${[['BT-27','Nom'],['BT-28','Nom commercial'],['BT-30','SIREN'],['BT-31','TVA européenne'],
              ['BT-35','Adresse'],['BT-37','Ville'],['BT-38','Code postal'],['BT-40','Pays']].map(([bt, lb]) => {
             const val = v(bt);
             return `<div class="dl-item ${val ? '' : 'absent'}">
@@ -522,9 +522,9 @@ function renderSynthese(r) {
       </div>
 
       <div class="carte-synthese">
-        <h3>Acheteur</h3>
+        <h3>Client</h3>
         <dl>
-          ${[['BT-44','Nom'],['BT-45','Nom commercial'],['BT-47','SIREN'],['BT-48','TVA intra'],
+          ${[['BT-44','Nom'],['BT-45','Nom commercial'],['BT-47','SIREN'],['BT-48','TVA européenne'],
              ['BT-50','Adresse'],['BT-52','Ville'],['BT-53','Code postal'],['BT-55','Pays']].map(([bt, lb]) => {
             const val = v(bt);
             return `<div class="dl-item ${val ? '' : 'absent'}">
@@ -538,9 +538,9 @@ function renderSynthese(r) {
       <div class="carte-synthese">
         <h3>Totaux</h3>
         <dl>
-          ${[['BT-106','Total HT lignes'],['BT-107','Remises document'],['BT-108','Frais document'],
+          ${[['BT-106','Total articles HT'],['BT-107','Remises globales'],['BT-108','Frais généraux'],
              ['BT-109','Total HT'],['BT-110','Total TVA'],['BT-112','Total TTC'],
-             ['BT-113','Déjà payé'],['BT-114','Arrondi'],['BT-115','Montant dû']].map(([bt, lb]) => {
+             ['BT-113','Acomptes versés'],['BT-114','Arrondi'],['BT-115','Reste à payer']].map(([bt, lb]) => {
             const val = v(bt);
             return `<div class="dl-item ${val ? '' : 'absent'}">
               <dt>${lb}</dt>
@@ -553,8 +553,8 @@ function renderSynthese(r) {
       <div class="carte-synthese">
         <h3>Paiement</h3>
         <dl>
-          ${[['BT-81','Moyen paiement'],['BT-82','Texte paiement'],['BT-83','Réf. remise'],
-             ['BT-84','IBAN'],['BT-85','Titulaire compte'],['BT-86','BIC'],
+          ${[['BT-81','Mode de paiement'],['BT-82','Libellé paiement'],['BT-83','Réf. paiement'],
+             ['BT-84','IBAN'],['BT-85','Titulaire compte'],['BT-86','BIC banque'],
              ['BT-89','Réf. mandat'],['BT-90','ICS créancier'],['BT-91','IBAN à débiter']].map(([bt, lb]) => {
             const val = v(bt);
             return `<div class="dl-item ${val ? '' : 'absent'}">
@@ -567,7 +567,7 @@ function renderSynthese(r) {
 
       ${r.tvaVentilation.length > 0 ? `
       <div class="carte-synthese">
-        <h3>Ventilation TVA</h3>
+        <h3>Détail de la TVA</h3>
         <table class="tableau-tva-mini">
           <thead><tr><th>Catégorie</th><th>Taux</th><th>Base</th><th>TVA</th></tr></thead>
           <tbody>
@@ -700,11 +700,11 @@ function renderChamps(r) {
         ${cuActuel ? `<span class="badge-profil profil-${cuActuel.profil_recommande}">${PROFILES[cuActuel.profil_recommande]?.label || cuActuel.profil_recommande}</span>` : ''}
       </div>
       <div class="champs-legende">
-        <span class="legende-chip vert">✓ Renseigné &amp; attendu</span>
-        <span class="legende-chip rouge">✕ Absent obligatoire</span>
-        <span class="legende-chip ambre">⚠ Absent conditionnel</span>
-        <span class="legende-chip bleu">● Renseigné (hors UC)</span>
-        <span class="legende-chip gris">○ Non attendu / vide</span>
+        <span class="legende-chip vert">✓ Renseigné</span>
+        <span class="legende-chip rouge">✕ Information requise manquante</span>
+        <span class="legende-chip ambre">⚠ Non renseigné (facultatif selon le contexte)</span>
+        <span class="legende-chip bleu">● Renseigné (hors cas)</span>
+        <span class="legende-chip gris">○ Sans objet / vide</span>
       </div>
     </div>`;
 

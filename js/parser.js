@@ -161,6 +161,55 @@ function extraireChampsCII(doc, xmlTexte) {
     champs['BT-47'].present = true;
   }
 
+  // BT-29 : ram:ID en priorité, fallback ram:GlobalID (schémé)
+  if (!champs['BT-29'].present) {
+    const idGlobalVendeur = xpathNoeud(doc, `//ram:ApplicableHeaderTradeAgreement/ram:SellerTradeParty/ram:GlobalID`);
+    if (idGlobalVendeur) {
+      champs['BT-29'].valeur = idGlobalVendeur.textContent?.trim();
+      champs['BT-29'].schema = idGlobalVendeur.getAttribute('schemeID');
+      champs['BT-29'].present = true;
+    }
+  }
+
+  // BT-46 : ram:ID en priorité, fallback ram:GlobalID
+  const idAcheteurPriv = xpathNoeud(doc, `//ram:ApplicableHeaderTradeAgreement/ram:BuyerTradeParty/ram:ID`);
+  const idAcheteurGlob = xpathNoeud(doc, `//ram:ApplicableHeaderTradeAgreement/ram:BuyerTradeParty/ram:GlobalID`);
+  const idAcheteur = idAcheteurPriv || idAcheteurGlob;
+  if (idAcheteur) {
+    champs['BT-46'].valeur = idAcheteur.textContent?.trim();
+    champs['BT-46'].schema = idAcheteur.getAttribute('schemeID');
+    champs['BT-46'].present = true;
+  }
+
+  // BT-56 : PersonName en priorité, fallback DepartmentName
+  if (!champs['BT-56'].present) {
+    const dept = xpathNoeud(doc, `//ram:ApplicableHeaderTradeAgreement/ram:BuyerTradeParty/ram:DefinedTradeContact/ram:DepartmentName`);
+    if (dept) {
+      champs['BT-56'].valeur = dept.textContent?.trim();
+      champs['BT-56'].present = true;
+    }
+  }
+
+  // BT-60 : ram:ID en priorité, fallback ram:GlobalID
+  const idBenefPriv = xpathNoeud(doc, `//ram:ApplicableHeaderTradeSettlement/ram:PayeeTradeParty/ram:ID`);
+  const idBenefGlob = xpathNoeud(doc, `//ram:ApplicableHeaderTradeSettlement/ram:PayeeTradeParty/ram:GlobalID`);
+  const idBenef = idBenefPriv || idBenefGlob;
+  if (idBenef) {
+    champs['BT-60'].valeur = idBenef.textContent?.trim();
+    champs['BT-60'].schema = idBenef.getAttribute('schemeID');
+    champs['BT-60'].present = true;
+  }
+
+  // BT-71 : ram:ID en priorité (dans fields.js), fallback ram:GlobalID
+  if (!champs['BT-71'].present) {
+    const idLivrGlob = xpathNoeud(doc, `//ram:ApplicableHeaderTradeDelivery/ram:ShipToTradeParty/ram:GlobalID`);
+    if (idLivrGlob) {
+      champs['BT-71'].valeur = idLivrGlob.textContent?.trim();
+      champs['BT-71'].schema = idLivrGlob.getAttribute('schemeID');
+      champs['BT-71'].present = true;
+    }
+  }
+
   // BT-2 format date
   const dateNoeud = xpathNoeud(doc, '//rsm:ExchangedDocument/ram:IssueDateTime/udt:DateTimeString');
   if (dateNoeud) {
