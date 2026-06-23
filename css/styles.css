@@ -639,11 +639,21 @@ dl { display: flex; flex-direction: column; gap: 6px; }
 .legende-chip {
   padding: 3px 10px; border-radius: 12px; font-size: .77rem; font-weight: 600; border: 1px solid;
 }
+.legende-chip[data-statut] { cursor: pointer; user-select: none; transition: box-shadow .15s, opacity .15s; }
+.legende-chip[data-statut]:hover { box-shadow: 0 0 0 2px currentColor; }
+.legende-chip[data-statut].actif { box-shadow: 0 0 0 2.5px currentColor; outline: 2px solid transparent; filter: brightness(.92); }
 .legende-chip.vert  { background: var(--vert-clair);  border-color: var(--vert-bord);  color: var(--vert); }
 .legende-chip.rouge { background: var(--rouge-clair); border-color: var(--rouge-bord); color: var(--rouge); }
 .legende-chip.ambre { background: var(--orange-clair);border-color: var(--orange-bord);color: var(--orange); }
 .legende-chip.bleu  { background: var(--bleu-clair);  border-color: var(--bleu-bord);  color: var(--bleu); }
 .legende-chip.gris  { background: var(--gris-100);    border-color: var(--gris-300);   color: var(--gris-500); }
+.champs-recherche-wrap { display: flex; }
+.champs-recherche-input {
+  flex: 1; padding: 6px 12px; border: 1px solid var(--gris-300); border-radius: var(--rayon-md);
+  font-size: .84rem; background: white; color: var(--gris-900); outline: none;
+  transition: border-color .15s, box-shadow .15s;
+}
+.champs-recherche-input:focus { border-color: var(--bleu-bord); box-shadow: 0 0 0 2px var(--bleu-clair); }
 
 /* BG accordion */
 .bg-groupe {

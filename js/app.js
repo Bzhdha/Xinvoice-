@@ -662,6 +662,30 @@ function selectionnerUCChamps(cuId) {
   afficherOnglet('champs', etatApp.resultat);
 }
 
+function toggleFiltreChamps(chip) {
+  chip.classList.toggle('actif');
+  filtrerChamps();
+}
+
+function filtrerChamps() {
+  const actifs = [...document.querySelectorAll('.legende-chip[data-statut].actif')].map(el => el.dataset.statut);
+  const recherche = (document.getElementById('champs-recherche')?.value || '').trim().toLowerCase();
+  const filtre = actifs.length > 0 || recherche.length > 0;
+
+  document.querySelectorAll('.bt-card').forEach(c => {
+    const matchFiltre = actifs.length === 0 || actifs.some(s => c.classList.contains('statut-' + s));
+    const texte = (c.querySelector('.bt-card-label')?.textContent || '') + ' ' + (c.querySelector('.bt-card-code')?.textContent || '');
+    const matchRecherche = !recherche || texte.toLowerCase().includes(recherche);
+    c.style.display = (matchFiltre && matchRecherche) ? '' : 'none';
+  });
+
+  document.querySelectorAll('.bg-groupe').forEach(g => {
+    const hasVisible = [...g.querySelectorAll('.bt-card')].some(c => c.style.display !== 'none');
+    g.style.display = hasVisible ? '' : 'none';
+    if (hasVisible && filtre) g.setAttribute('open', '');
+  });
+}
+
 function renderChamps(r) {
   const el = document.createElement('div');
   el.className = 'onglet-contenu';
@@ -700,11 +724,15 @@ function renderChamps(r) {
         ${cuActuel ? `<span class="badge-profil profil-${cuActuel.profil_recommande}">${PROFILES[cuActuel.profil_recommande]?.label || cuActuel.profil_recommande}</span>` : ''}
       </div>
       <div class="champs-legende">
-        <span class="legende-chip vert">✓ Renseigné</span>
-        <span class="legende-chip rouge">✕ Information requise manquante</span>
-        <span class="legende-chip ambre">⚠ Non renseigné (facultatif selon le contexte)</span>
-        <span class="legende-chip bleu">● Renseigné (hors cas)</span>
-        <span class="legende-chip gris">○ Sans objet / vide</span>
+        <span class="legende-chip vert"  data-statut="vert"  onclick="toggleFiltreChamps(this)" title="Filtrer : renseignés">✓ Renseigné</span>
+        <span class="legende-chip rouge" data-statut="rouge" onclick="toggleFiltreChamps(this)" title="Filtrer : informations manquantes">✕ Information requise manquante</span>
+        <span class="legende-chip ambre" data-statut="ambre" onclick="toggleFiltreChamps(this)" title="Filtrer : non renseignés">⚠ Non renseigné (facultatif selon le contexte)</span>
+        <span class="legende-chip bleu"  data-statut="bleu"  onclick="toggleFiltreChamps(this)" title="Filtrer : renseignés hors cas">● Renseigné (hors cas)</span>
+        <span class="legende-chip gris"  data-statut="gris"  onclick="toggleFiltreChamps(this)" title="Filtrer : sans objet">○ Sans objet / vide</span>
+      </div>
+      <div class="champs-recherche-wrap">
+        <input type="search" id="champs-recherche" class="champs-recherche-input"
+          placeholder="Rechercher par libellé ou code BT…" oninput="filtrerChamps()" autocomplete="off">
       </div>
     </div>`;
 
