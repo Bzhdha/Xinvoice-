@@ -686,6 +686,13 @@ function filtrerChamps() {
   });
 }
 
+function effacerFiltresChamps() {
+  document.querySelectorAll('.legende-chip[data-statut].actif').forEach(c => c.classList.remove('actif'));
+  const input = document.getElementById('champs-recherche');
+  if (input) input.value = '';
+  filtrerChamps();
+}
+
 function renderChamps(r) {
   const el = document.createElement('div');
   el.className = 'onglet-contenu';
@@ -733,6 +740,7 @@ function renderChamps(r) {
       <div class="champs-recherche-wrap">
         <input type="search" id="champs-recherche" class="champs-recherche-input"
           placeholder="Rechercher par libellé ou code BT…" oninput="filtrerChamps()" autocomplete="off">
+        <button class="champs-effacer-btn" onclick="effacerFiltresChamps()" title="Réinitialiser tous les filtres">Tout effacer</button>
       </div>
     </div>`;
 

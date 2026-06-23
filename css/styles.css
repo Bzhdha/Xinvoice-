@@ -647,7 +647,13 @@ dl { display: flex; flex-direction: column; gap: 6px; }
 .legende-chip.ambre { background: var(--orange-clair);border-color: var(--orange-bord);color: var(--orange); }
 .legende-chip.bleu  { background: var(--bleu-clair);  border-color: var(--bleu-bord);  color: var(--bleu); }
 .legende-chip.gris  { background: var(--gris-100);    border-color: var(--gris-300);   color: var(--gris-500); }
-.champs-recherche-wrap { display: flex; }
+.champs-recherche-wrap { display: flex; gap: 8px; }
+.champs-effacer-btn {
+  padding: 6px 12px; border: 1px solid var(--gris-300); border-radius: var(--rayon-md);
+  font-size: .82rem; background: white; color: var(--gris-600); cursor: pointer;
+  white-space: nowrap; transition: background .15s, color .15s;
+}
+.champs-effacer-btn:hover { background: var(--gris-100); color: var(--gris-900); }
 .champs-recherche-input {
   flex: 1; padding: 6px 12px; border: 1px solid var(--gris-300); border-radius: var(--rayon-md);
   font-size: .84rem; background: white; color: var(--gris-900); outline: none;
